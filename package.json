@@ -10,13 +10,13 @@
     "build": "electron-builder --win --linux",
     "build-win": "electron-builder --win",
     "build-linux": "electron-builder --linux",
-    "release": "electron-builder --publish=always"
+    "release": "electron-builder --win --linux --publish=always"
   },
   "author": {
-    "name": "Your Name",
-    "email": "your.email@example.com"
+    "name": "Brock Schoenthlaer",
+    "email": "brockschoenthaler@gmail.com"
   },
-  "homepage": "https://github.com/your-username/collectors-dream",
+  "homepage": "https://github.com/BSchoenth245/Collectors-Dream",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
@@ -42,8 +42,8 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "YOUR_ACTUAL_USERNAME",
-      "repo": "YOUR_ACTUAL_REPO_NAME"
+      "owner": "BSchoenth245",
+      "repo": "Collectors-Dream"
     },
     "win": {
       "target": "nsis",
