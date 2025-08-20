@@ -117,11 +117,11 @@ function deleteRecord(id) {
     })
     .then(() => {
         fetchAndDisplayData(); // Refresh the table
-        alert('Record deleted successfully');
+        Swal.fire('Success!', 'Record deleted successfully', 'success');
     })
     .catch(error => {
         console.error('Error deleting record:', error);
-        alert('Error deleting record: ' + error.message);
+        Swal.fire('Error!', 'Error deleting record: ' + error.message, 'error');
     });
 }
 
@@ -221,12 +221,12 @@ function submitCategoryData() {
     })
     .then(response => response.json())
     .then(result => {
-        alert('Data saved successfully!');
+        Swal.fire('Success!', 'Data saved successfully!', 'success');
         inputs.forEach(input => input.value = '');
         refreshTable();
     })
     .catch(error => {
-        alert('Error saving data: ' + error.message);
+        Swal.fire('Error!', 'Error saving data: ' + error.message, 'error');
     });
 }
 
@@ -338,7 +338,7 @@ function saveEditCategory() {
     const fieldDivs = document.getElementById('editCategoryFields').children;
     
     if (!categoryName) {
-        alert('Please enter a category name');
+        Swal.fire('Warning!', 'Please enter a category name', 'warning');
         return;
     }
     
@@ -356,7 +356,7 @@ function saveEditCategory() {
     }
     
     if (fields.length === 0) {
-        alert('Please add at least one field');
+        Swal.fire('Warning!', 'Please add at least one field', 'warning');
         return;
     }
     
@@ -379,10 +379,10 @@ function saveEditCategory() {
         categories[categoryKey] = updatedCategory;
         populateCategoryDropdowns();
         cancelEditCategory();
-        alert('Category updated successfully!');
+        Swal.fire('Success!', 'Category updated successfully!', 'success');
     })
     .catch(error => {
-        alert('Error updating category: ' + error.message);
+        Swal.fire('Error!', 'Error updating category: ' + error.message, 'error');
     });
 }
 
@@ -392,7 +392,7 @@ function saveNewCategory() {
     const fieldDivs = document.getElementById('newCategoryFields').children;
     
     if (!categoryName) {
-        alert('Please enter a category name');
+        Swal.fire('Warning!', 'Please enter a category name', 'warning');
         return;
     }
     
@@ -410,7 +410,7 @@ function saveNewCategory() {
     }
     
     if (fields.length === 0) {
-        alert('Please add at least one field');
+        Swal.fire('Warning!', 'Please add at least one field', 'warning');
         return;
     }
     
@@ -433,10 +433,10 @@ function saveNewCategory() {
         categories[categoryKey] = newCategory;
         populateCategoryDropdowns();
         cancelAddCategory();
-        alert('Category saved successfully!');
+        Swal.fire('Success!', 'Category saved successfully!', 'success');
     })
     .catch(error => {
-        alert('Error saving category: ' + error.message);
+        Swal.fire('Error!', 'Error saving category: ' + error.message, 'error');
     });
 }
 
