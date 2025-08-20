@@ -1,0 +1,142 @@
+{
+    "pokemon": {
+        "name": "Pokemon Card",
+        "fields": [
+            {
+                "name": "name",
+                "label": "Name",
+                "type": "text"
+            },
+            {
+                "name": "type",
+                "label": "Type",
+                "type": "text"
+            },
+            {
+                "name": "hp",
+                "label": "HP",
+                "type": "number"
+            },
+            {
+                "name": "rarity",
+                "label": "Rarity",
+                "type": "text"
+            },
+            {
+                "name": "set",
+                "label": "Set",
+                "type": "text"
+            }
+        ]
+    },
+    "book": {
+        "name": "Book",
+        "fields": [
+            {
+                "name": "title",
+                "label": "Title",
+                "type": "text"
+            },
+            {
+                "name": "author",
+                "label": "Author",
+                "type": "text"
+            },
+            {
+                "name": "isbn",
+                "label": "ISBN",
+                "type": "text"
+            },
+            {
+                "name": "pages",
+                "label": "Pages",
+                "type": "number"
+            },
+            {
+                "name": "genre",
+                "label": "Genre",
+                "type": "text"
+            }
+        ]
+    },
+    "movie": {
+        "name": "Movie",
+        "fields": [
+            {
+                "name": "title",
+                "label": "Title",
+                "type": "text"
+            },
+            {
+                "name": "director",
+                "label": "Director",
+                "type": "text"
+            },
+            {
+                "name": "year",
+                "label": "Year",
+                "type": "number"
+            },
+            {
+                "name": "genre",
+                "label": "Genre",
+                "type": "text"
+            },
+            {
+                "name": "rating",
+                "label": "Rating",
+                "type": "text"
+            }
+        ]
+    },
+    "hot_wheels": {
+        "name": "Hot Wheels",
+        "fields": [
+            {
+                "name": "name",
+                "label": "Name",
+                "type": "text"
+            },
+            {
+                "name": "color",
+                "label": "Color",
+                "type": "text"
+            },
+            {
+                "name": "release_year",
+                "label": "Release Year",
+                "type": "number"
+            }
+        ]
+    },
+    "furniture": {
+        "name": "Furniture",
+        "fields": [
+            {
+                "name": "name",
+                "label": "Name",
+                "type": "text"
+            },
+            {
+                "name": "type",
+                "label": "Type",
+                "type": "text"
+            },
+            {
+                "name": "color",
+                "label": "Color",
+                "type": "text"
+            },
+            {
+                "name": "price",
+                "label": "Price",
+                "type": "number"
+            },
+            {
+                "name": "sku#",
+                "label": "SKU#",
+                "type": "number"
+            }
+        ]
+    }
+}

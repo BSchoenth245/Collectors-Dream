@@ -1,0 +1,58 @@
+{
+  "name": "collectors-dream",
+  "version": "1.0.1",
+  "description": "A database management system for collectors",
+  "main": "main.js",
+  "scripts": {
+    "setup": "node setup.js",
+    "start": "node start-app.js",
+    "desktop": "electron .",
+    "build": "electron-builder --win --linux",
+    "build-win": "electron-builder --win",
+    "build-linux": "electron-builder --linux",
+    "release": "electron-builder --publish=always"
+  },
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com"
+  },
+  "homepage": "https://github.com/your-username/collectors-dream",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mongodb": "^6.15.0",
+    "mongoose": "^8.13.2",
+    "electron-updater": "^6.1.0"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.collectorsdream.app",
+    "productName": "Collectors Dream",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!data/**/*",
+      "!dist/**/*"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "YOUR_ACTUAL_USERNAME",
+      "repo": "YOUR_ACTUAL_REPO_NAME"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/colored-logo.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/icon.png",
+      "category": "Utility"
+    }
+  }
+}
