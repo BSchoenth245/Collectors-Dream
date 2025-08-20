@@ -23,7 +23,10 @@
                 <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search" type="button" role="tab">Search Entries</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="entry-tab" data-bs-toggle="tab" data-bs-target="#entry" type="button" role="tab">Data Entry</button>
+                <button class="nav-link" id="entry-tab" data-bs-toggle="tab" data-bs-target="#entry" type="button" role="tab">Add Entry</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button" role="tab">Categories</button>
             </li>
         </ul>
 
@@ -37,11 +40,26 @@
                         <label for="searchCategorySelect" class="form-label">Select Category:</label>
                         <select id="searchCategorySelect" class="form-select" onchange="filterByCategory()">
                             <option value="">Choose a category...</option>
-                            <option value="pokemon">Pokemon Card</option>
-                            <option value="book">Book</option>
-                            <option value="movie">Movie</option>
                         </select>
                     </div>
+                </div>
+                
+                <!-- DataTable Section - Only in Search Tab -->
+                <div class="datatable-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3>Database Records</h3>
+                        <button class="btn btn-secondary" onclick="refreshTable()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <table id="dataTable" class="table table-striped" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Name</th>
+                            </tr>
+                        </thead>
+                    </table>
                 </div>
             </div>
 
@@ -49,26 +67,9 @@
             <div class="tab-pane fade" id="entry" role="tabpanel">
                 <div class="mb-3">
                     <label for="categorySelect" class="form-label">Select Category:</label>
-                    <div class="d-flex gap-2">
-                        <select id="categorySelect" class="form-select" onchange="loadCategoryForm()">
-                            <option value="">Choose a category...</option>
-                            <option value="pokemon">Pokemon Card</option>
-                            <option value="book">Book</option>
-                            <option value="movie">Movie</option>
-                        </select>
-                        <button class="btn btn-primary" onclick="showAddCategoryForm()">Add Category</button>
-                    </div>
-                </div>
-
-                <div id="addCategoryForm" style="display: none;" class="mb-3 p-3 border rounded">
-                    <h5>Add New Category</h5>
-                    <div class="mb-2">
-                        <input type="text" id="newCategoryName" class="form-control" placeholder="Category Name">
-                    </div>
-                    <div id="newCategoryFields"></div>
-                    <button class="btn btn-sm btn-secondary" onclick="addNewField()">Add Field</button>
-                    <button class="btn btn-sm btn-success" onclick="saveNewCategory()">Save Category</button>
-                    <button class="btn btn-sm btn-danger" onclick="cancelAddCategory()">Cancel</button>
+                    <select id="categorySelect" class="form-select" onchange="loadCategoryForm()">
+                        <option value="">Choose a category...</option>
+                    </select>
                 </div>
 
                 <div id="dataForm" style="display: none;">
@@ -78,24 +79,46 @@
                     </button>
                 </div>
             </div>
-        </div>
 
-        <!-- DataTable Section -->
-        <div class="datatable-container">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3>Database Records</h3>
-                <button class="btn btn-secondary" onclick="refreshTable()">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
+            <!-- Categories Tab -->
+            <div class="tab-pane fade" id="categories" role="tabpanel">
+                <div class="mb-3">
+                    <div class="d-flex gap-2 mb-3">
+                        <button class="btn btn-primary" onclick="showAddCategoryForm()">Create New Category</button>
+                        <button class="btn btn-secondary" onclick="showEditCategoryForm()">Edit Category</button>
+                    </div>
+                </div>
+
+                <div id="addCategoryForm" style="display: none;" class="mb-3 p-3 border rounded">
+                    <h5>Create New Category</h5>
+                    <div class="mb-2">
+                        <input type="text" id="newCategoryName" class="form-control" placeholder="Category Name">
+                    </div>
+                    <div id="newCategoryFields"></div>
+                    <button class="btn btn-sm btn-secondary" onclick="addNewField()">Add Field</button>
+                    <button class="btn btn-sm btn-success" onclick="saveNewCategory()">Save Category</button>
+                    <button class="btn btn-sm btn-danger" onclick="cancelAddCategory()">Cancel</button>
+                </div>
+
+                <div id="editCategoryForm" style="display: none;" class="mb-3 p-3 border rounded">
+                    <h5>Edit Category</h5>
+                    <div class="mb-2">
+                        <label for="editCategorySelect" class="form-label">Select Category to Edit:</label>
+                        <select id="editCategorySelect" class="form-select" onchange="loadEditCategoryForm()">
+                            <option value="">Choose a category...</option>
+                        </select>
+                    </div>
+                    <div id="editCategoryContent" style="display: none;">
+                        <div class="mb-2">
+                            <input type="text" id="editCategoryName" class="form-control" placeholder="Category Name">
+                        </div>
+                        <div id="editCategoryFields"></div>
+                        <button class="btn btn-sm btn-secondary" onclick="addEditField()">Add Field</button>
+                        <button class="btn btn-sm btn-success" onclick="saveEditCategory()">Save Changes</button>
+                        <button class="btn btn-sm btn-danger" onclick="cancelEditCategory()">Cancel</button>
+                    </div>
+                </div>
             </div>
-            <table id="dataTable" class="table table-striped" style="width:100%">
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Name</th>
-                    </tr>
-                </thead>
-            </table>
         </div>
     </div>
 

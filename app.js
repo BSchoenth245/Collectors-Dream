@@ -141,10 +141,12 @@ fetch('http://127.0.0.1:8000/categories')
 function populateCategoryDropdowns() {
     const categorySelect = document.getElementById('categorySelect');
     const searchSelect = document.getElementById('searchCategorySelect');
+    const editSelect = document.getElementById('editCategorySelect');
     
     // Clear existing options except first
     categorySelect.innerHTML = '<option value="">Choose a category...</option>';
     searchSelect.innerHTML = '<option value="">Choose a category...</option>';
+    editSelect.innerHTML = '<option value="">Choose a category...</option>';
     
     // Add categories from JSON
     Object.keys(categories).forEach(key => {
@@ -157,6 +159,11 @@ function populateCategoryDropdowns() {
         option2.value = key;
         option2.textContent = categories[key].name;
         searchSelect.appendChild(option2);
+        
+        const option3 = document.createElement('option');
+        option3.value = key;
+        option3.textContent = categories[key].name;
+        editSelect.appendChild(option3);
     });
 }
 
@@ -179,9 +186,11 @@ function loadCategoryForm() {
     category.fields.forEach(field => {
         const fieldDiv = document.createElement('div');
         fieldDiv.className = 'mb-3';
+        const inputType = field.type === 'number' ? 'text' : field.type;
+        const inputPattern = field.type === 'number' ? 'pattern="[0-9]*"' : '';
         fieldDiv.innerHTML = `
             <label class="form-label">${field.label}:</label>
-            <input type="${field.type}" class="form-control" name="${field.name}" required>
+            <input type="${inputType}" ${inputPattern} class="form-control" name="${field.name}" required>
         `;
         formFields.appendChild(fieldDiv);
     });
@@ -221,12 +230,19 @@ function submitCategoryData() {
     });
 }
 
-// === NEW CATEGORY CREATION ===
+// === CATEGORY MANAGEMENT ===
 let newFieldCount = 0;
 
 // Show form to create new category
 function showAddCategoryForm() {
     document.getElementById('addCategoryForm').style.display = 'block';
+    document.getElementById('editCategoryForm').style.display = 'none';
+}
+
+// Show form to edit existing category
+function showEditCategoryForm() {
+    document.getElementById('editCategoryForm').style.display = 'block';
+    document.getElementById('addCategoryForm').style.display = 'none';
 }
 
 // Cancel category creation and reset form
@@ -235,6 +251,15 @@ function cancelAddCategory() {
     document.getElementById('newCategoryName').value = '';
     document.getElementById('newCategoryFields').innerHTML = '';
     newFieldCount = 0;
+}
+
+// Cancel category editing and reset form
+function cancelEditCategory() {
+    document.getElementById('editCategoryForm').style.display = 'none';
+    document.getElementById('editCategoryContent').style.display = 'none';
+    document.getElementById('editCategorySelect').value = '';
+    document.getElementById('editCategoryName').value = '';
+    document.getElementById('editCategoryFields').innerHTML = '';
 }
 
 // Add new field to category creation form
@@ -252,6 +277,113 @@ function addNewField() {
     `;
     fieldsContainer.appendChild(fieldDiv);
     newFieldCount++;
+}
+
+// Load category data for editing
+function loadEditCategoryForm() {
+    const editSelect = document.getElementById('editCategorySelect');
+    const editContent = document.getElementById('editCategoryContent');
+    const editNameInput = document.getElementById('editCategoryName');
+    const editFieldsContainer = document.getElementById('editCategoryFields');
+    
+    const selectedKey = editSelect.value;
+    
+    if (!selectedKey) {
+        editContent.style.display = 'none';
+        return;
+    }
+    
+    const category = categories[selectedKey];
+    editNameInput.value = category.name;
+    editFieldsContainer.innerHTML = '';
+    
+    // Populate existing fields
+    category.fields.forEach(field => {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'mb-2 d-flex gap-2';
+        fieldDiv.innerHTML = `
+            <input type="text" value="${field.label}" class="form-control">
+            <select class="form-select">
+                <option value="text" ${field.type === 'text' ? 'selected' : ''}>Text</option>
+                <option value="number" ${field.type === 'number' ? 'selected' : ''}>Number</option>
+            </select>
+            <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">Remove</button>
+        `;
+        editFieldsContainer.appendChild(fieldDiv);
+    });
+    
+    editContent.style.display = 'block';
+}
+
+// Add new field to edit form
+function addEditField() {
+    const fieldsContainer = document.getElementById('editCategoryFields');
+    const fieldDiv = document.createElement('div');
+    fieldDiv.className = 'mb-2 d-flex gap-2';
+    fieldDiv.innerHTML = `
+        <input type="text" placeholder="Field Name" class="form-control">
+        <select class="form-select">
+            <option value="text">Text</option>
+            <option value="number">Number</option>
+        </select>
+        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">Remove</button>
+    `;
+    fieldsContainer.appendChild(fieldDiv);
+}
+
+// Save edited category
+function saveEditCategory() {
+    const editSelect = document.getElementById('editCategorySelect');
+    const categoryName = document.getElementById('editCategoryName').value;
+    const fieldDivs = document.getElementById('editCategoryFields').children;
+    
+    if (!categoryName) {
+        alert('Please enter a category name');
+        return;
+    }
+    
+    const fields = [];
+    for (let div of fieldDivs) {
+        const nameInput = div.querySelector('input[type="text"]');
+        const typeSelect = div.querySelector('select');
+        if (nameInput.value) {
+            fields.push({
+                name: nameInput.value.toLowerCase().replace(/\s+/g, '_'),
+                label: nameInput.value,
+                type: typeSelect.value
+            });
+        }
+    }
+    
+    if (fields.length === 0) {
+        alert('Please add at least one field');
+        return;
+    }
+    
+    const categoryKey = editSelect.value;
+    const updatedCategory = {
+        name: categoryName,
+        fields: fields
+    };
+    
+    // Save to server
+    fetch('http://127.0.0.1:8000/categories', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ key: categoryKey, category: updatedCategory })
+    })
+    .then(response => response.json())
+    .then(result => {
+        categories[categoryKey] = updatedCategory;
+        populateCategoryDropdowns();
+        cancelEditCategory();
+        alert('Category updated successfully!');
+    })
+    .catch(error => {
+        alert('Error updating category: ' + error.message);
+    });
 }
 
 // Save new category to server
