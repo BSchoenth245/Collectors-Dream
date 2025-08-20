@@ -86,8 +86,9 @@ Collector's Dream is a comprehensive database management application that empowe
 
 2. **Create Your First Category**
    - Click "Add New Category" on the main dashboard
-   - Choose from templates (Pokemon Cards, Books, Movies) or create custom
-   - Define fields relevant to your collection (e.g., Name, Condition, Value, Date Acquired)
+   - Create a custom category (no default templates included)
+   - Define fields relevant to your collection
+   - **Example**: For a "Trading Cards" category, add fields like Name (text), Condition (text), Value (number), Date Acquired (text)
 
 3. **Add Items to Your Collection**
    - Select a category from the dashboard
@@ -117,9 +118,9 @@ Collector's Dream is a comprehensive database management application that empowe
 
 ### 🗂️ **Unlimited Custom Categories**
 - Create categories for any type of collection or inventory
-- Pre-built templates for popular collections (Pokemon cards, books, movies)
+- Start with a clean slate - no pre-built templates
 - Define custom fields specific to each category
-- Support for text, numbers, dates, and boolean data types
+- Support for text and number data types
 
 ### 🔍 **Advanced Search & Organization**
 - Real-time search across all collections
@@ -141,17 +142,12 @@ Collector's Dream is a comprehensive database management application that empowe
 
 ## 🎯 Example Use Cases
 
-**Collectors**:
-- Trading card collections (Pokemon, Magic, Sports cards)
-- Comic books with issue numbers, conditions, and values
-- Vinyl records with pressing details and catalog numbers
-- Vintage items with provenance and authentication details
-
-**Personal Organization**:
-- Home inventory for insurance purposes
-- Book libraries with reading status and ratings
-- Movie/TV show watchlists with personal ratings
-- Recipe collections with ingredients and cooking notes
+**Example Categories You Can Create**:
+- **Trading Cards**: Name, Set, Condition, Value, Rarity
+- **Books**: Title, Author, Genre, Pages, Rating
+- **Movies**: Title, Director, Year, Genre, Format
+- **Home Inventory**: Item, Room, Purchase Date, Value, Warranty
+- **Collectibles**: Name, Category, Condition, Purchase Price, Current Value
 
 **Professional Use**:
 - Small business inventory management
