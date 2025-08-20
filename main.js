@@ -1,9 +1,11 @@
+// === ELECTRON MAIN PROCESS ===
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
 let mainWindow;
 let server;
 
+// Create main application window
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
@@ -31,6 +33,8 @@ function createWindow() {
     });
 }
 
+// === EMBEDDED SERVER ===
+// Start Express server within Electron
 function startServer() {
     // Import and start the server directly
     const express = require('express');
@@ -51,12 +55,12 @@ function startServer() {
         useUnifiedTopology: true
     }).catch(err => console.log('MongoDB connection error:', err));
     
-    // Schema
+    // === DATABASE SCHEMA ===
     const Schema = mongoose.Schema;
     const dataSchema = new Schema({}, { strict: false });
     const Data = mongoose.model('Data', dataSchema, 'collection');
     
-    // Routes
+    // === API ROUTES ===
     expressApp.get('/collection', async (req, res) => {
         try {
             const allData = await Data.find();
@@ -128,8 +132,10 @@ function startServer() {
     });
 }
 
+// === ELECTRON APP LIFECYCLE ===
 app.whenReady().then(createWindow);
 
+// Handle app quit when all windows closed
 app.on('window-all-closed', () => {
     if (server) {
         server.close();
@@ -139,6 +145,7 @@ app.on('window-all-closed', () => {
     }
 });
 
+// Handle app activation (macOS)
 app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();

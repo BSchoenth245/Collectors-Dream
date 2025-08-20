@@ -1,3 +1,5 @@
+// === DATA DISPLAY FUNCTIONS ===
+// Fetch and display all collection data in table
 function fetchAndDisplayData() {
     // First check if table exists
     const table = document.getElementById('dataTable');
@@ -77,6 +79,7 @@ function fetchAndDisplayData() {
     });
 }
 
+// === DOM INITIALIZATION ===
 // Ensure DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Check if table exists
@@ -92,10 +95,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// === TABLE MANAGEMENT ===
+// Refresh table data
 function refreshTable() {
     fetchAndDisplayData();
 }
 
+// Delete specific record by ID
 function deleteRecord(id) {
     fetch(`http://127.0.0.1:8000/collection/${id}`, {
         method: 'DELETE',
@@ -119,9 +125,10 @@ function deleteRecord(id) {
     });
 }
 
+// === CATEGORY MANAGEMENT ===
 let categories = {};
 
-// Load categories from server
+// Load categories from server on page load
 fetch('http://127.0.0.1:8000/categories')
 .then(response => response.json())
 .then(data => {
@@ -130,6 +137,7 @@ fetch('http://127.0.0.1:8000/categories')
 })
 .catch(error => console.error('Error loading categories:', error));
 
+// Populate dropdown menus with available categories
 function populateCategoryDropdowns() {
     const categorySelect = document.getElementById('categorySelect');
     const searchSelect = document.getElementById('searchCategorySelect');
@@ -152,6 +160,7 @@ function populateCategoryDropdowns() {
     });
 }
 
+// Load form fields based on selected category
 function loadCategoryForm() {
     const categorySelect = document.getElementById('categorySelect');
     const dataForm = document.getElementById('dataForm');
@@ -180,6 +189,7 @@ function loadCategoryForm() {
     dataForm.style.display = 'block';
 }
 
+// Submit new item data to database
 function submitCategoryData() {
     const formFields = document.getElementById('formFields');
     const inputs = formFields.querySelectorAll('input');
@@ -211,12 +221,15 @@ function submitCategoryData() {
     });
 }
 
+// === NEW CATEGORY CREATION ===
 let newFieldCount = 0;
 
+// Show form to create new category
 function showAddCategoryForm() {
     document.getElementById('addCategoryForm').style.display = 'block';
 }
 
+// Cancel category creation and reset form
 function cancelAddCategory() {
     document.getElementById('addCategoryForm').style.display = 'none';
     document.getElementById('newCategoryName').value = '';
@@ -224,6 +237,7 @@ function cancelAddCategory() {
     newFieldCount = 0;
 }
 
+// Add new field to category creation form
 function addNewField() {
     const fieldsContainer = document.getElementById('newCategoryFields');
     const fieldDiv = document.createElement('div');
@@ -240,6 +254,7 @@ function addNewField() {
     newFieldCount++;
 }
 
+// Save new category to server
 function saveNewCategory() {
     const categoryName = document.getElementById('newCategoryName').value;
     const fieldDivs = document.getElementById('newCategoryFields').children;
@@ -293,6 +308,8 @@ function saveNewCategory() {
     });
 }
 
+// === SEARCH & FILTER ===
+// Filter table data by selected category
 function filterByCategory() {
     const categorySelect = document.getElementById('searchCategorySelect');
     const selectedCategory = categorySelect.value;
@@ -324,6 +341,7 @@ function filterByCategory() {
     });
 }
 
+// Display filtered data in table
 function displayFilteredData(data) {
     const table = document.getElementById('dataTable');
     table.innerHTML = '';

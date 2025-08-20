@@ -1,9 +1,11 @@
+// === SETUP SCRIPT ===
 const { spawn, exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
 console.log('🚀 Setting up Collector\'s Dream App...\n');
 
+// === MONGODB SETUP ===
 // Check if MongoDB is installed
 function checkMongoDB() {
     return new Promise((resolve) => {
@@ -35,7 +37,7 @@ function startMongoDB() {
     });
 }
 
-// Create data directory
+// Create MongoDB data directory
 function createDataDir() {
     const dataDir = path.join(__dirname, 'data', 'db');
     if (!fs.existsSync(dataDir)) {
@@ -44,7 +46,8 @@ function createDataDir() {
     }
 }
 
-// Install dependencies
+// === DEPENDENCY INSTALLATION ===
+// Install npm dependencies
 function installDependencies() {
     return new Promise((resolve) => {
         console.log('📦 Installing dependencies...');
@@ -64,7 +67,8 @@ function installDependencies() {
     });
 }
 
-// Main setup function
+// === MAIN SETUP PROCESS ===
+// Run complete setup process
 async function setup() {
     try {
         const mongoInstalled = await checkMongoDB();

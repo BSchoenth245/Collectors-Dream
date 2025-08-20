@@ -1,10 +1,14 @@
+// === AUTO-UPDATER MODULE ===
 const { autoUpdater } = require('electron-updater');
 const { dialog } = require('electron');
 
+// Handle automatic app updates
 class AppUpdater {
     constructor() {
         autoUpdater.checkForUpdatesAndNotify();
         
+        // === UPDATE EVENT HANDLERS ===
+        // Handle update available notification
         autoUpdater.on('update-available', () => {
             dialog.showMessageBox({
                 type: 'info',
@@ -14,6 +18,7 @@ class AppUpdater {
             });
         });
 
+        // Handle update downloaded notification
         autoUpdater.on('update-downloaded', () => {
             dialog.showMessageBox({
                 type: 'info',

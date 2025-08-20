@@ -1,4 +1,4 @@
-// MongoDB connection setup
+// === DEPENDENCIES & SETUP ===
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -6,10 +6,11 @@ const cors = require('cors');
 const app = express();
 const port = 8000;
 
-// Middleware
+// === MIDDLEWARE ===
 app.use(cors());
 app.use(express.json());
 
+// === DATABASE CONNECTION ===
 const mongoURI = 'mongodb://127.0.0.1:27017/CollectorDream';
 mongoose.connect(mongoURI, {
     useNewUrlParser: true,
@@ -18,12 +19,14 @@ mongoose.connect(mongoURI, {
 .then(() => console.log('MongoDB connected successfully'))
 .catch(err => console.log('MongoDB connection error:', err));
 
-// Define a basic schema - modify according to your data structure
+// === DATABASE SCHEMA ===
 const Schema = mongoose.Schema;
 const dataSchema = new Schema({}, { strict: false });
 const Data = mongoose.model('Data', dataSchema, 'collection');
 
 
+// === COLLECTION ROUTES ===
+// Get all collection items
 app.get('/collection', async (req, res) => {
     try {
         // Query the collection
@@ -34,6 +37,7 @@ app.get('/collection', async (req, res) => {
     }
 });
 
+// Add new collection item
 app.post('/collection', async (req, res) => {
     try {
         const newData = Data(req.body)
@@ -47,6 +51,7 @@ app.post('/collection', async (req, res) => {
     }
 })
 
+// Delete collection item by ID
 app.delete('/collection/:id', async (req, res) => {
     try {
         const id = req.params.id;
@@ -69,10 +74,11 @@ app.delete('/collection/:id', async (req, res) => {
     }
 })
 
-// Categories endpoints
+// === CATEGORY ROUTES ===
 const fs = require('fs');
 const path = require('path');
 
+// Get all categories from JSON file
 app.get('/categories', (req, res) => {
     try {
         const categoriesPath = path.join(__dirname, 'categories.json');
@@ -83,6 +89,7 @@ app.get('/categories', (req, res) => {
     }
 });
 
+// Save new category to JSON file
 app.post('/categories', (req, res) => {
     try {
         const categoriesPath = path.join(__dirname, 'categories.json');
@@ -98,14 +105,16 @@ app.post('/categories', (req, res) => {
     }
 });
 
+// === STATIC FILES & SERVER START ===
 // Serve static files
 app.use(express.static(__dirname));
 
-// Serve the main page
+// Serve main HTML page
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
+// Start server
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });

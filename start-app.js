@@ -1,8 +1,10 @@
+// === APP STARTUP SCRIPT ===
 const { spawn } = require('child_process');
 const { exec } = require('child_process');
 
 console.log('🚀 Starting Collector\'s Dream App...\n');
 
+// === MONGODB MANAGEMENT ===
 // Check if MongoDB is running
 function checkMongoRunning() {
     return new Promise((resolve) => {
@@ -28,6 +30,7 @@ function startMongoDB() {
     });
 }
 
+// === APPLICATION SERVER ===
 // Start the application server
 function startApp() {
     console.log('🌐 Starting application server...');
@@ -45,6 +48,7 @@ function startApp() {
     });
 }
 
+// === MAIN START PROCESS ===
 // Main start function
 async function start() {
     try {
