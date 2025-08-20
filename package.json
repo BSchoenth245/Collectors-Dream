@@ -1,6 +1,6 @@
 {
   "name": "collectors-dream",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A database management system for collectors",
   "main": "main.js",
   "scripts": {
