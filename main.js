@@ -37,9 +37,8 @@ function createWindow() {
 // === EMBEDDED SERVER ===
 // Start Express server within Electron
 function startServer() {
-    // Import and start the server directly
     const express = require('express');
-    const mongoose = require('mongoose');
+    const sqlite3 = require('sqlite3').verbose();
     const cors = require('cors');
     const fs = require('fs');
     
@@ -50,52 +49,60 @@ function startServer() {
     expressApp.use(cors());
     expressApp.use(express.json());
     
-    const mongoURI = 'mongodb://127.0.0.1:27017/CollectorDream';
-    mongoose.connect(mongoURI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    }).catch(err => console.log('MongoDB connection error:', err));
+    // === DATABASE CONNECTION ===
+    const dbPath = path.join(__dirname, 'data', 'collectors.db');
     
-    // === DATABASE SCHEMA ===
-    const Schema = mongoose.Schema;
-    const dataSchema = new Schema({}, { strict: false });
-    const Data = mongoose.model('Data', dataSchema, 'collection');
+    // Ensure data directory exists
+    if (!fs.existsSync(path.dirname(dbPath))) {
+        fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+    }
+    
+    const db = new sqlite3.Database(dbPath, (err) => {
+        if (err) {
+            console.error('SQLite connection error:', err.message);
+        } else {
+            console.log('SQLite connected successfully');
+            db.run(`CREATE TABLE IF NOT EXISTS collection (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                data TEXT NOT NULL
+            )`);
+        }
+    });
     
     // === API ROUTES ===
-    expressApp.get('/collection', async (req, res) => {
-        try {
-            const allData = await Data.find();
-            res.json(allData);
-        } catch (error) {
-            res.status(500).json({ message: error.message });
-        }
+    expressApp.get('/collection', (req, res) => {
+        db.all('SELECT * FROM collection', [], (err, rows) => {
+            if (err) {
+                res.status(500).json({ message: err.message });
+            } else {
+                const data = rows.map(row => ({ id: row.id, ...JSON.parse(row.data) }));
+                res.json(data);
+            }
+        });
     });
     
-    expressApp.post('/collection', async (req, res) => {
-        try {
-            const newData = Data(req.body);
-            const savedData = await newData.save();
-            res.status(201).json(savedData);
-        } catch(err){
-            res.status(400).json({message: err.message});
-        }
+    expressApp.post('/collection', (req, res) => {
+        const dataString = JSON.stringify(req.body);
+        db.run('INSERT INTO collection (data) VALUES (?)', [dataString], function(err) {
+            if (err) {
+                res.status(400).json({ message: err.message });
+            } else {
+                res.status(201).json({ id: this.lastID, ...req.body });
+            }
+        });
     });
     
-    expressApp.delete('/collection/:id', async (req, res) => {
-        try {
-            const id = req.params.id;
-            const document = await Data.findById(id);
-            if (!document) {
-                return res.status(404).json({ message: "Document not found" });
+    expressApp.delete('/collection/:id', (req, res) => {
+        const id = req.params.id;
+        db.run('DELETE FROM collection WHERE id = ?', [id], function(err) {
+            if (err) {
+                res.status(500).json({ message: err.message });
+            } else if (this.changes === 0) {
+                res.status(404).json({ message: 'Document not found' });
+            } else {
+                res.json({ message: 'Document deleted successfully' });
             }
-            const deletedData = await Data.findByIdAndDelete(id);
-            res.json({ message: "Document deleted successfully", deletedData });
-        } catch (error) {
-            if (error.name === 'CastError') {
-                return res.status(400).json({ message: "Invalid ID format" });
-            }
-            res.status(500).json({ message: error.message });
-        }
+        });
     });
     
     expressApp.get('/categories', (req, res) => {
@@ -116,6 +123,24 @@ function startServer() {
             categories[key] = category;
             fs.writeFileSync(categoriesPath, JSON.stringify(categories, null, 4));
             res.json({ message: 'Category saved successfully' });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    });
+    
+    expressApp.delete('/categories/:key', (req, res) => {
+        try {
+            const categoriesPath = path.join(__dirname, 'categories.json');
+            const categories = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'));
+            const { key } = req.params;
+            
+            if (!categories[key]) {
+                return res.status(404).json({ message: 'Category not found' });
+            }
+            
+            delete categories[key];
+            fs.writeFileSync(categoriesPath, JSON.stringify(categories, null, 4));
+            res.json({ message: 'Category deleted successfully' });
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
