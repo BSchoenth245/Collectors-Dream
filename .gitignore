@@ -9,6 +9,11 @@ dist/
 build/
 out/
 
+# MongoDB binaries (downloaded during build)
+mongodb-binaries/
+*.zip
+*.tgz
+
 # Database files
 data/
 *.db
@@ -18,6 +23,9 @@ data/
 .env
 .env.local
 .env.production
+
+# GitHub token file
+GH Token
 
 # OS generated files
 .DS_Store
