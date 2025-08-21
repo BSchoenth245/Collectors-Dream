@@ -24,8 +24,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "mongodb": "^6.15.0",
-    "mongoose": "^8.13.2",
+    "sqlite3": "^5.1.6",
     "electron-updater": "^6.1.0"
   },
   "devDependencies": {
@@ -41,8 +40,7 @@
     "files": [
       "**/*",
       "!data/**/*",
-      "!dist/**/*",
-      "mongodb-binaries/**/*"
+      "!dist/**/*"
     ],
     "publish": {
       "provider": "github",
@@ -51,26 +49,12 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "assets/colored-logo.png",
-      "extraResources": [
-        {
-          "from": "mongodb-binaries/win",
-          "to": "mongodb",
-          "filter": ["**/*"]
-        }
-      ]
+      "icon": "assets/colored-logo.png"
     },
     "linux": {
       "target": "AppImage",
       "icon": "build/icon.png",
-      "category": "Utility",
-      "extraResources": [
-        {
-          "from": "mongodb-binaries/linux",
-          "to": "mongodb",
-          "filter": ["**/*"]
-        }
-      ]
+      "category": "Utility"
     }
   }
 }
