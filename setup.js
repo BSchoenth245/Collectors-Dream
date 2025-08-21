@@ -3,188 +3,99 @@ const { spawn, exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const https = require('https');
 
 console.log('🚀 Setting up Collector\'s Dream App...\n');
 
+// Get bundled MongoDB path
+function getBundledMongoPath() {
+    const platform = os.platform();
+    const isElectron = process.versions.electron;
+    
+    if (isElectron) {
+        // In packaged Electron app
+        const resourcesPath = process.resourcesPath;
+        return platform === 'win32' 
+            ? path.join(resourcesPath, 'mongodb', 'bin', 'mongod.exe')
+            : path.join(resourcesPath, 'mongodb', 'bin', 'mongod');
+    } else {
+        // In development
+        return platform === 'win32'
+            ? path.join(__dirname, 'mongodb-binaries', 'win', 'bin', 'mongod.exe')
+            : path.join(__dirname, 'mongodb-binaries', 'linux', 'bin', 'mongod');
+    }
+}
+
 // === MONGODB SETUP ===
-// Check if MongoDB is installed
+// Check if MongoDB is available (system or bundled)
 function checkMongoDB() {
     return new Promise((resolve) => {
+        // First check system MongoDB
         exec('mongod --version', (error) => {
-            if (error) {
-                console.log('❌ MongoDB not found.');
-                resolve(false);
-            } else {
-                console.log('✅ MongoDB found');
-                resolve(true);
-            }
-        });
-    });
-}
-
-// Install MongoDB automatically
-function installMongoDB() {
-    return new Promise(async (resolve) => {
-        const platform = os.platform();
-        console.log('📥 Installing MongoDB...');
-        
-        try {
-            if (platform === 'win32') {
-                await installMongoDBWindows();
-            } else if (platform === 'linux') {
-                await installMongoDBLinux();
-            } else {
-                console.log('❌ Automatic MongoDB installation not supported on this platform.');
-                console.log('   Please install MongoDB manually: https://www.mongodb.com/try/download/community');
-                resolve(false);
-                return;
-            }
-            resolve(true);
-        } catch (error) {
-            console.log('❌ MongoDB installation failed:', error.message);
-            console.log('   Please install MongoDB manually: https://www.mongodb.com/try/download/community');
-            resolve(false);
-        }
-    });
-}
-
-// Install MongoDB on Windows using Chocolatey
-function installMongoDBWindows() {
-    return new Promise((resolve, reject) => {
-        console.log('🔄 Installing MongoDB on Windows using Chocolatey...');
-        
-        // First check if Chocolatey is installed
-        exec('choco --version', (error) => {
-            if (error) {
-                console.log('📦 Installing Chocolatey first...');
-                const chocoInstall = spawn('powershell', [
-                    '-Command',
-                    'Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString(\'https://community.chocolatey.org/install.ps1\'))'
-                ], { stdio: 'inherit' });
-                
-                chocoInstall.on('close', (code) => {
-                    if (code === 0) {
-                        installMongoWithChoco(resolve, reject);
-                    } else {
-                        reject(new Error('Failed to install Chocolatey'));
-                    }
-                });
-            } else {
-                installMongoWithChoco(resolve, reject);
-            }
-        });
-    });
-}
-
-function installMongoWithChoco(resolve, reject) {
-    console.log('📦 Installing MongoDB with Chocolatey...');
-    const mongoInstall = spawn('choco', ['install', 'mongodb', '-y'], { stdio: 'inherit' });
-    
-    mongoInstall.on('close', (code) => {
-        if (code === 0) {
-            console.log('✅ MongoDB installed successfully');
-            // Start MongoDB service
-            exec('net start MongoDB', (error) => {
-                if (error) {
-                    console.log('⚠️  MongoDB installed but service not started. You may need to start it manually.');
-                }
-                resolve();
-            });
-        } else {
-            reject(new Error('Failed to install MongoDB'));
-        }
-    });
-}
-
-// Install MongoDB on Linux
-function installMongoDBLinux() {
-    return new Promise((resolve, reject) => {
-        console.log('🔄 Installing MongoDB on Linux...');
-        
-        // Check if apt is available (Ubuntu/Debian)
-        exec('which apt-get', (error) => {
             if (!error) {
-                installMongoDBUbuntu(resolve, reject);
+                console.log('✅ System MongoDB found');
+                resolve({ found: true, bundled: false });
+                return;
+            }
+            
+            // Check bundled MongoDB
+            const bundledPath = getBundledMongoPath();
+            if (fs.existsSync(bundledPath)) {
+                console.log('✅ Bundled MongoDB found');
+                resolve({ found: true, bundled: true, path: bundledPath });
             } else {
-                // Check if yum is available (CentOS/RHEL)
-                exec('which yum', (yumError) => {
-                    if (!yumError) {
-                        installMongoDBCentOS(resolve, reject);
-                    } else {
-                        reject(new Error('Unsupported Linux distribution. Please install MongoDB manually.'));
-                    }
-                });
+                console.log('❌ No MongoDB found (system or bundled)');
+                resolve({ found: false });
             }
         });
     });
 }
 
-function installMongoDBUbuntu(resolve, reject) {
-    const commands = [
-        'wget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | sudo apt-key add -',
-        'echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list',
-        'sudo apt-get update',
-        'sudo apt-get install -y mongodb-org',
-        'sudo systemctl start mongod',
-        'sudo systemctl enable mongod'
-    ];
+// Show MongoDB installation instructions
+function showMongoDBInstructions() {
+    const platform = os.platform();
+    console.log('\n📋 MongoDB Installation Required\n');
     
-    executeCommands(commands, resolve, reject);
-}
-
-function installMongoDBCentOS(resolve, reject) {
-    const repoContent = `[mongodb-org-7.0]
-name=MongoDB Repository
-baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/7.0/x86_64/
-gpgcheck=1
-enabled=1
-gpgkey=https://www.mongodb.org/static/pgp/server-7.0.asc`;
-    
-    fs.writeFileSync('/tmp/mongodb-org-7.0.repo', repoContent);
-    
-    const commands = [
-        'sudo cp /tmp/mongodb-org-7.0.repo /etc/yum.repos.d/',
-        'sudo yum install -y mongodb-org',
-        'sudo systemctl start mongod',
-        'sudo systemctl enable mongod'
-    ];
-    
-    executeCommands(commands, resolve, reject);
-}
-
-function executeCommands(commands, resolve, reject) {
-    let index = 0;
-    
-    function runNext() {
-        if (index >= commands.length) {
-            console.log('✅ MongoDB installed and started successfully');
-            resolve();
-            return;
-        }
-        
-        const command = commands[index];
-        console.log(`Running: ${command}`);
-        
-        exec(command, (error, stdout, stderr) => {
-            if (error) {
-                console.log(`Error: ${error.message}`);
-                reject(error);
-                return;
-            }
-            index++;
-            runNext();
-        });
+    if (platform === 'win32') {
+        console.log('🪟 Windows Installation:');
+        console.log('1. Download MongoDB Community Server:');
+        console.log('   https://www.mongodb.com/try/download/community');
+        console.log('2. Select "Windows" and "msi" package');
+        console.log('3. Run the installer with these settings:');
+        console.log('   ✓ Choose "Complete" installation');
+        console.log('   ✓ Check "Install MongoDB as a Service"');
+        console.log('   ✓ Check "Run service as Network Service user"');
+        console.log('4. After installation, restart your computer');
+        console.log('5. Run "npm run setup" again\n');
+    } else if (platform === 'linux') {
+        console.log('🐧 Linux Installation:');
+        console.log('Ubuntu/Debian:');
+        console.log('  sudo apt-get update');
+        console.log('  sudo apt-get install -y mongodb');
+        console.log('  sudo systemctl start mongodb');
+        console.log('  sudo systemctl enable mongodb\n');
+        console.log('CentOS/RHEL:');
+        console.log('  sudo yum install -y mongodb-server');
+        console.log('  sudo systemctl start mongod');
+        console.log('  sudo systemctl enable mongod\n');
+    } else if (platform === 'darwin') {
+        console.log('🍎 macOS Installation:');
+        console.log('Using Homebrew:');
+        console.log('  brew tap mongodb/brew');
+        console.log('  brew install mongodb-community');
+        console.log('  brew services start mongodb/brew/mongodb-community\n');
     }
     
-    runNext();
+    console.log('After installing MongoDB, run "npm run setup" again.');
+    console.log('\nNeed help? Check the troubleshooting guide in README.md\n');
 }
 
-// Start MongoDB service
-function startMongoDB() {
+// Start MongoDB service (system or bundled)
+function startMongoDB(mongoInfo) {
     return new Promise((resolve) => {
         console.log('🔄 Starting MongoDB service...');
-        const mongoProcess = spawn('mongod', ['--dbpath', './data/db'], {
+        
+        const mongodCmd = mongoInfo.bundled ? mongoInfo.path : 'mongod';
+        const mongoProcess = spawn(mongodCmd, ['--dbpath', './data/db'], {
             stdio: 'pipe'
         });
         
@@ -229,13 +140,10 @@ function installDependencies() {
 // Run complete setup process
 async function setup() {
     try {
-        let mongoInstalled = await checkMongoDB();
-        if (!mongoInstalled) {
-            console.log('🔄 Attempting to install MongoDB automatically...');
-            mongoInstalled = await installMongoDB();
-            if (!mongoInstalled) {
-                process.exit(1);
-            }
+        const mongoInfo = await checkMongoDB();
+        if (!mongoInfo.found) {
+            showMongoDBInstructions();
+            process.exit(1);
         }
 
         createDataDir();

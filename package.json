@@ -1,13 +1,15 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "collectors-dream",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A database management system for collectors",
   "main": "main.js",
   "scripts": {
     "setup": "node setup.js",
     "start": "node start-app.js",
     "desktop": "electron .",
+    "download-mongodb": "node download-mongodb.js",
+    "prebuild": "npm run download-mongodb",
     "build": "electron-builder --win --linux",
     "build-win": "electron-builder --win",
     "build-linux": "electron-builder --linux",
@@ -39,7 +41,8 @@
     "files": [
       "**/*",
       "!data/**/*",
-      "!dist/**/*"
+      "!dist/**/*",
+      "mongodb-binaries/**/*"
     ],
     "publish": {
       "provider": "github",
@@ -48,12 +51,26 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "assets/colored-logo.png"
+      "icon": "assets/colored-logo.png",
+      "extraResources": [
+        {
+          "from": "mongodb-binaries/win",
+          "to": "mongodb",
+          "filter": ["**/*"]
+        }
+      ]
     },
     "linux": {
       "target": "AppImage",
       "icon": "build/icon.png",
-      "category": "Utility"
+      "category": "Utility",
+      "extraResources": [
+        {
+          "from": "mongodb-binaries/linux",
+          "to": "mongodb",
+          "filter": ["**/*"]
+        }
+      ]
     }
   }
 }
