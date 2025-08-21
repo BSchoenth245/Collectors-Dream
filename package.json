@@ -1,15 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "collectors-dream",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "A database management system for collectors",
   "main": "main.js",
   "scripts": {
-    "setup": "node setup.js",
     "start": "node start-app.js",
     "desktop": "electron .",
-    "download-mongodb": "node download-mongodb.js",
-    "prebuild": "npm run download-mongodb",
     "build": "electron-builder --win --linux",
     "build-win": "electron-builder --win",
     "build-linux": "electron-builder --linux",
@@ -40,7 +37,10 @@
     "files": [
       "**/*",
       "!data/**/*",
-      "!dist/**/*"
+      "!dist/**/*",
+      "!docker*",
+      "!setup.js",
+      "!mongodb-installer.js"
     ],
     "publish": {
       "provider": "github",

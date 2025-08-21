@@ -1,7 +1,9 @@
 // === DEPENDENCIES & SETUP ===
 const express = require('express');
-const mongoose = require('mongoose');
+const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const port = 8000;
@@ -11,72 +13,67 @@ app.use(cors());
 app.use(express.json());
 
 // === DATABASE CONNECTION ===
-const mongoURI = 'mongodb://127.0.0.1:27017/CollectorDream';
-mongoose.connect(mongoURI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => console.log('MongoDB connected successfully'))
-.catch(err => console.log('MongoDB connection error:', err));
+const dbPath = path.join(__dirname, 'data', 'collectors.db');
 
-// === DATABASE SCHEMA ===
-const Schema = mongoose.Schema;
-const dataSchema = new Schema({}, { strict: false });
-const Data = mongoose.model('Data', dataSchema, 'collection');
+// Ensure data directory exists
+if (!fs.existsSync(path.dirname(dbPath))) {
+    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+}
+
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error('SQLite connection error:', err.message);
+    } else {
+        console.log('SQLite connected successfully');
+        // Create table if it doesn't exist
+        db.run(`CREATE TABLE IF NOT EXISTS collection (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            data TEXT NOT NULL
+        )`);
+    }
+});
 
 
 // === COLLECTION ROUTES ===
 // Get all collection items
-app.get('/collection', async (req, res) => {
-    try {
-        // Query the collection
-        const allData = await Data.find();
-        res.json(allData);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+app.get('/collection', (req, res) => {
+    db.all('SELECT * FROM collection', [], (err, rows) => {
+        if (err) {
+            res.status(500).json({ message: err.message });
+        } else {
+            const data = rows.map(row => ({ id: row.id, ...JSON.parse(row.data) }));
+            res.json(data);
+        }
+    });
 });
 
 // Add new collection item
-app.post('/collection', async (req, res) => {
-    try {
-        const newData = Data(req.body)
-
-        const savedData = await newData.save()
-
-        res.status(201).json(savedData)
-    } catch(err){
-        res.status(400).json({message: err.message})
-    
-    }
-})
+app.post('/collection', (req, res) => {
+    const dataString = JSON.stringify(req.body);
+    db.run('INSERT INTO collection (data) VALUES (?)', [dataString], function(err) {
+        if (err) {
+            res.status(400).json({ message: err.message });
+        } else {
+            res.status(201).json({ id: this.lastID, ...req.body });
+        }
+    });
+});
 
 // Delete collection item by ID
-app.delete('/collection/:id', async (req, res) => {
-    try {
-        const id = req.params.id;
-        
-        // Check if the document exists first
-        const document = await Data.findById(id);
-        if (!document) {
-            return res.status(404).json({ message: "Document not found" });
+app.delete('/collection/:id', (req, res) => {
+    const id = req.params.id;
+    db.run('DELETE FROM collection WHERE id = ?', [id], function(err) {
+        if (err) {
+            res.status(500).json({ message: err.message });
+        } else if (this.changes === 0) {
+            res.status(404).json({ message: 'Document not found' });
+        } else {
+            res.json({ message: 'Document deleted successfully' });
         }
-
-        // Delete the document
-        const deletedData = await Data.findByIdAndDelete(id);
-        res.json({ message: "Document deleted successfully", deletedData });
-    } catch (error) {
-        // Handle invalid ID format error
-        if (error.name === 'CastError') {
-            return res.status(400).json({ message: "Invalid ID format" });
-        }
-        res.status(500).json({ message: error.message });
-    }
-})
+    });
+});
 
 // === CATEGORY ROUTES ===
-const fs = require('fs');
-const path = require('path');
 
 // Get all categories from JSON file
 app.get('/categories', (req, res) => {
