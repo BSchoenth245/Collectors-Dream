@@ -105,6 +105,25 @@ app.post('/categories', (req, res) => {
     }
 });
 
+// Delete category from JSON file
+app.delete('/categories/:key', (req, res) => {
+    try {
+        const categoriesPath = path.join(__dirname, 'categories.json');
+        const categories = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'));
+        const { key } = req.params;
+        
+        if (!categories[key]) {
+            return res.status(404).json({ message: 'Category not found' });
+        }
+        
+        delete categories[key];
+        fs.writeFileSync(categoriesPath, JSON.stringify(categories, null, 4));
+        res.json({ message: 'Category deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // === STATIC FILES & SERVER START ===
 // Serve static files
 app.use(express.static(__dirname));

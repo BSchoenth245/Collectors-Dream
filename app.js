@@ -142,11 +142,13 @@ function populateCategoryDropdowns() {
     const categorySelect = document.getElementById('categorySelect');
     const searchSelect = document.getElementById('searchCategorySelect');
     const editSelect = document.getElementById('editCategorySelect');
+    const deleteSelect = document.getElementById('deleteCategorySelect');
     
     // Clear existing options except first
     categorySelect.innerHTML = '<option value="">Choose a category...</option>';
     searchSelect.innerHTML = '<option value="">Choose a category...</option>';
     editSelect.innerHTML = '<option value="">Choose a category...</option>';
+    deleteSelect.innerHTML = '<option value="">Choose a category...</option>';
     
     // Add categories from JSON
     Object.keys(categories).forEach(key => {
@@ -164,6 +166,11 @@ function populateCategoryDropdowns() {
         option3.value = key;
         option3.textContent = categories[key].name;
         editSelect.appendChild(option3);
+        
+        const option4 = document.createElement('option');
+        option4.value = key;
+        option4.textContent = categories[key].name;
+        deleteSelect.appendChild(option4);
     });
 }
 
@@ -237,12 +244,21 @@ let newFieldCount = 0;
 function showAddCategoryForm() {
     document.getElementById('addCategoryForm').style.display = 'block';
     document.getElementById('editCategoryForm').style.display = 'none';
+    document.getElementById('deleteCategoryForm').style.display = 'none';
 }
 
 // Show form to edit existing category
 function showEditCategoryForm() {
     document.getElementById('editCategoryForm').style.display = 'block';
     document.getElementById('addCategoryForm').style.display = 'none';
+    document.getElementById('deleteCategoryForm').style.display = 'none';
+}
+
+// Show form to delete category
+function showDeleteCategoryForm() {
+    document.getElementById('deleteCategoryForm').style.display = 'block';
+    document.getElementById('addCategoryForm').style.display = 'none';
+    document.getElementById('editCategoryForm').style.display = 'none';
 }
 
 // Cancel category creation and reset form
@@ -260,6 +276,54 @@ function cancelEditCategory() {
     document.getElementById('editCategorySelect').value = '';
     document.getElementById('editCategoryName').value = '';
     document.getElementById('editCategoryFields').innerHTML = '';
+}
+
+// Cancel category deletion and reset form
+function cancelDeleteCategory() {
+    document.getElementById('deleteCategoryForm').style.display = 'none';
+    document.getElementById('deleteCategorySelect').value = '';
+}
+
+// Delete selected category
+function deleteCategory() {
+    const deleteSelect = document.getElementById('deleteCategorySelect');
+    const categoryKey = deleteSelect.value;
+    
+    if (!categoryKey) {
+        Swal.fire('Warning!', 'Please select a category to delete', 'warning');
+        return;
+    }
+    
+    const categoryName = categories[categoryKey].name;
+    
+    Swal.fire({
+        title: 'Are you sure?',
+        text: `Delete category "${categoryName}"? This cannot be undone!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`http://127.0.0.1:8000/categories/${categoryKey}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                delete categories[categoryKey];
+                populateCategoryDropdowns();
+                cancelDeleteCategory();
+                Swal.fire('Deleted!', 'Category has been deleted.', 'success');
+            })
+            .catch(error => {
+                Swal.fire('Error!', 'Error deleting category: ' + error.message, 'error');
+            });
+        }
+    });
 }
 
 // Add new field to category creation form

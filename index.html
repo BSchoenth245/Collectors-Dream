@@ -88,6 +88,7 @@
                     <div class="d-flex gap-2 mb-3">
                         <button class="btn btn-primary" onclick="showAddCategoryForm()">Create New Category</button>
                         <button class="btn btn-secondary" onclick="showEditCategoryForm()">Edit Category</button>
+                        <button class="btn btn-danger" onclick="showDeleteCategoryForm()">Delete Category</button>
                     </div>
                 </div>
 
@@ -119,6 +120,18 @@
                         <button class="btn btn-sm btn-success" onclick="saveEditCategory()">Save Changes</button>
                         <button class="btn btn-sm btn-danger" onclick="cancelEditCategory()">Cancel</button>
                     </div>
+                </div>
+
+                <div id="deleteCategoryForm" style="display: none;" class="mb-3 p-3 border rounded">
+                    <h5>Delete Category</h5>
+                    <div class="mb-2">
+                        <label for="deleteCategorySelect" class="form-label">Select Category to Delete:</label>
+                        <select id="deleteCategorySelect" class="form-select">
+                            <option value="">Choose a category...</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-sm btn-danger" onclick="deleteCategory()">Delete Category</button>
+                    <button class="btn btn-sm btn-secondary" onclick="cancelDeleteCategory()">Cancel</button>
                 </div>
             </div>
         </div>
