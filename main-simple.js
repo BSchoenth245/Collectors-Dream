@@ -5,7 +5,8 @@ const { exec } = require('child_process');
 console.log('🚀 Starting Collector\'s Dream...');
 
 // Start the server
-const serverProcess = spawn('node', ['start-app.js'], {
+const path = require('path');
+const serverProcess = spawn('node', [path.join(__dirname, 'start-app.js')], {
     stdio: 'inherit'
 });
 

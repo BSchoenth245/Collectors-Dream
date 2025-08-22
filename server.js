@@ -1,6 +1,6 @@
 // === DEPENDENCIES & SETUP ===
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const Database = require('better-sqlite3');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -20,57 +20,50 @@ if (!fs.existsSync(path.dirname(dbPath))) {
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 }
 
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('SQLite connection error:', err.message);
-    } else {
-        console.log('SQLite connected successfully');
-        // Create table if it doesn't exist
-        db.run(`CREATE TABLE IF NOT EXISTS collection (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            data TEXT NOT NULL
-        )`);
-    }
-});
+const db = new Database(dbPath);
+console.log('SQLite connected successfully');
+db.exec(`CREATE TABLE IF NOT EXISTS collection (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    data TEXT NOT NULL
+)`);
 
 
 // === COLLECTION ROUTES ===
 // Get all collection items
 app.get('/collection', (req, res) => {
-    db.all('SELECT * FROM collection', [], (err, rows) => {
-        if (err) {
-            res.status(500).json({ message: err.message });
-        } else {
-            const data = rows.map(row => ({ id: row.id, ...JSON.parse(row.data) }));
-            res.json(data);
-        }
-    });
+    try {
+        const rows = db.prepare('SELECT * FROM collection').all();
+        const data = rows.map(row => ({ id: row.id, ...JSON.parse(row.data) }));
+        res.json(data);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
 // Add new collection item
 app.post('/collection', (req, res) => {
-    const dataString = JSON.stringify(req.body);
-    db.run('INSERT INTO collection (data) VALUES (?)', [dataString], function(err) {
-        if (err) {
-            res.status(400).json({ message: err.message });
-        } else {
-            res.status(201).json({ id: this.lastID, ...req.body });
-        }
-    });
+    try {
+        const dataString = JSON.stringify(req.body);
+        const result = db.prepare('INSERT INTO collection (data) VALUES (?)').run(dataString);
+        res.status(201).json({ id: result.lastInsertRowid, ...req.body });
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
 });
 
 // Delete collection item by ID
 app.delete('/collection/:id', (req, res) => {
-    const id = req.params.id;
-    db.run('DELETE FROM collection WHERE id = ?', [id], function(err) {
-        if (err) {
-            res.status(500).json({ message: err.message });
-        } else if (this.changes === 0) {
+    try {
+        const id = req.params.id;
+        const result = db.prepare('DELETE FROM collection WHERE id = ?').run(id);
+        if (result.changes === 0) {
             res.status(404).json({ message: 'Document not found' });
         } else {
             res.json({ message: 'Document deleted successfully' });
         }
-    });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
 
 // === CATEGORY ROUTES ===
