@@ -1,7 +1,8 @@
 // === ELECTRON MAIN PROCESS ===
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
-const AppUpdater = require('./updater');
+const fs = require('fs');
+// const AppUpdater = require('./updater');
 
 let mainWindow;
 let server;
@@ -161,7 +162,10 @@ function startServer() {
 // === ELECTRON APP LIFECYCLE ===
 app.whenReady().then(() => {
     createWindow();
-    new AppUpdater();
+    // Temporarily disable updater for debugging
+    // setTimeout(() => {
+    //     new AppUpdater();
+    // }, 3000);
 });
 
 // Handle app quit when all windows closed
