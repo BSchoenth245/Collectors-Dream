@@ -70,12 +70,13 @@
       "category": "Utility",
       "artifactName": "${productName}-${version}.${ext}"
     },
-    "compression": "normal",
+    "compression": "store",
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "differentialPackage": false
     }
   }
 }
