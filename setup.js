@@ -3,69 +3,18 @@ const { spawn, exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const readline = require('readline');
-const { installMongoDB } = require('./mongodb-installer');
 
 console.log('🚀 Setting up Collector\'s Dream App...\n');
 
-// Create readline interface for user input
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-
-// Ask user for consent to install MongoDB
-function askUserConsent() {
-    return new Promise((resolve) => {
-        console.log('⚠️  REQUIRED: MongoDB Database Installation');
-        console.log('Collector\'s Dream requires MongoDB to store your collection data.');
-        console.log('This setup will automatically install MongoDB on your system.\n');
-        
-        rl.question('Do you agree to install MongoDB? (y/N): ', (answer) => {
-            rl.close();
-            resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
-        });
-    });
-}
-
-// Get bundled MongoDB path
-function getBundledMongoPath() {
-    const platform = os.platform();
-    const isElectron = process.versions.electron;
-    
-    if (isElectron) {
-        // In packaged Electron app
-        const resourcesPath = process.resourcesPath;
-        return platform === 'win32' 
-            ? path.join(resourcesPath, 'mongodb', 'bin', 'mongod.exe')
-            : path.join(resourcesPath, 'mongodb', 'bin', 'mongod');
-    } else {
-        // In development
-        return platform === 'win32'
-            ? path.join(__dirname, 'mongodb-binaries', 'win', 'bin', 'mongod.exe')
-            : path.join(__dirname, 'mongodb-binaries', 'linux', 'bin', 'mongod');
-    }
-}
-
-// === MONGODB SETUP ===
-// Check if MongoDB is available (system or bundled)
+// Check if MongoDB is available
 function checkMongoDB() {
     return new Promise((resolve) => {
-        // First check system MongoDB
         exec('mongod --version', (error) => {
             if (!error) {
-                console.log('✅ System MongoDB found');
-                resolve({ found: true, bundled: false });
-                return;
-            }
-            
-            // Check bundled MongoDB
-            const bundledPath = getBundledMongoPath();
-            if (fs.existsSync(bundledPath)) {
-                console.log('✅ Bundled MongoDB found');
-                resolve({ found: true, bundled: true, path: bundledPath });
+                console.log('✅ MongoDB found');
+                resolve({ found: true });
             } else {
-                console.log('❌ No MongoDB found (system or bundled)');
+                console.log('❌ MongoDB not found');
                 resolve({ found: false });
             }
         });
@@ -111,22 +60,7 @@ function showMongoDBInstructions() {
     console.log('\nNeed help? Check the troubleshooting guide in README.md\n');
 }
 
-// Start MongoDB service (system or bundled)
-function startMongoDB(mongoInfo) {
-    return new Promise((resolve) => {
-        console.log('🔄 Starting MongoDB service...');
-        
-        const mongodCmd = mongoInfo.bundled ? mongoInfo.path : 'mongod';
-        const mongoProcess = spawn(mongodCmd, ['--dbpath', './data/db'], {
-            stdio: 'pipe'
-        });
-        
-        setTimeout(() => {
-            console.log('✅ MongoDB service started');
-            resolve(mongoProcess);
-        }, 3000);
-    });
-}
+
 
 // Create MongoDB data directory
 function createDataDir() {
@@ -164,27 +98,13 @@ async function setup() {
     try {
         const mongoInfo = await checkMongoDB();
         if (!mongoInfo.found) {
-            console.log('📋 MongoDB is required for Collector\'s Dream to function.\n');
-            
-            const userConsent = await askUserConsent();
-            if (!userConsent) {
-                console.log('\n❌ Setup cancelled. MongoDB installation is required.');
-                console.log('You can run "npm run setup" again when ready to install MongoDB.');
-                process.exit(1);
-            }
-            
-            console.log('\n🚀 Installing MongoDB...');
-            const installSuccess = await installMongoDB();
-            
-            if (!installSuccess) {
-                console.log('\n❌ Automatic MongoDB installation failed.');
-                showMongoDBInstructions();
-                process.exit(1);
-            }
-            
-            console.log('\n✅ MongoDB installation completed!');
+            console.log('❌ MongoDB is required but not found on your system.');
+            showMongoDBInstructions();
+            console.log('\nPlease install MongoDB and run "npm run setup" again.');
+            process.exit(1);
         }
 
+        console.log('✅ MongoDB found - proceeding with setup...');
         createDataDir();
         
         const depsInstalled = await installDependencies();
@@ -196,7 +116,6 @@ async function setup() {
         console.log('\nTo start the app:');
         console.log('  npm start        - Start web version');
         console.log('  npm run desktop  - Start desktop version');
-        console.log('\nMake sure MongoDB is running before starting the app.');
         
     } catch (error) {
         console.error('❌ Setup failed:', error.message);

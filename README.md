@@ -31,10 +31,10 @@ Collector's Dream is a comprehensive database management application that empowe
      - Check "Allow executing file as program"
      - Double-click to launch
 
-3. **First Launch**: The application will automatically:
-   - Check for MongoDB installation
-   - Set up the local database
-   - Launch the interface
+3. **First Launch**: 
+   - The application will check for MongoDB installation
+   - If MongoDB is not found, you'll see installation instructions
+   - After installing MongoDB, the app will set up the local database and launch
 
 ### Option 2: Run from Source Code
 
@@ -46,21 +46,23 @@ Collector's Dream is a comprehensive database management application that empowe
    cd collectors-dream
    ```
 
-2. **Automated Setup**:
+2. **Install Dependencies**:
    ```bash
-   npm run setup
+   npm install
    ```
-   This script will:
-   - Install all dependencies
-   - Check for MongoDB
-   - Configure the database
-   - Verify the installation
 
-3. **Launch the Application**:
+3. **Install MongoDB** (if not already installed):
+   - Download from https://www.mongodb.com/try/download/community
+   - Run installer and select "Complete" installation
+   - Ensure "Install MongoDB as a Service" is checked
+
+4. **Launch the Application**:
    ```bash
    npm start        # Web version (browser-based)
    npm run desktop  # Desktop app (native window)
    ```
+   
+   **Note**: The desktop app will show MongoDB installation instructions if MongoDB is not detected on your system.
 
 ## ⚙️ System Requirements
 

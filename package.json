@@ -3,10 +3,11 @@
   "name": "collectors-dream",
   "version": "1.0.0",
   "description": "A database management system for collectors",
-  "main": "main.js",
+  "main": "main-with-setup.js",
   "scripts": {
     "start": "node start-app.js",
     "desktop": "electron .",
+    "setup": "node setup.js",
     "build": "electron-builder --win --linux",
     "build-win": "electron-builder --win",
     "build-linux": "electron-builder --linux",
@@ -43,9 +44,14 @@
       "!data/**/*",
       "!dist/**/*",
       "!*.md",
-      "!main-*",
+      "!main.js",
+      "!main-fixed.js",
+      "!main-simple.js",
+      "!main-test.js",
       "!setup.js",
       "!mongodb-installer.js",
+      "!download-mongodb.js",
+      "!installer-screen.nsh",
       "!RELEASE_NOTES*"
     ],
     "publish": {
@@ -76,7 +82,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "differentialPackage": false
+      "differentialPackage": false,
+      "runAfterFinish": false
     }
   }
 }
