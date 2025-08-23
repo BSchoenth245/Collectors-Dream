@@ -36,21 +36,25 @@
       "output": "dist"
     },
     "files": [
-      "*.js",
-      "*.html",
-      "*.json",
+      "main-with-setup.js",
+      "mongodb-setup.html",
+      "index.html",
+      "styles.css",
+      "app.js",
+      "updater.js",
+      "categories.json",
       "assets/**/*",
       "node_modules/**/*",
+
       "!data/**/*",
       "!dist/**/*",
       "!*.md",
       "!main.js",
-      "!main-fixed.js",
-      "!main-simple.js",
-      "!main-test.js",
+      "!main-*.js",
       "!setup.js",
       "!mongodb-installer.js",
       "!download-mongodb.js",
+      "!post-install.js",
       "!installer-screen.nsh",
       "!RELEASE_NOTES*"
     ],
@@ -76,7 +80,7 @@
       "category": "Utility",
       "artifactName": "${productName}-${version}.${ext}"
     },
-    "compression": "store",
+    "compression": "maximum",
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
