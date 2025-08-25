@@ -2,6 +2,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const AppUpdater = require('./updater');
 const MongoInstaller = require('./mongo-installer');
 
@@ -58,15 +59,20 @@ function createWindow() {
     });
 }
 
+// Get user data directory
+function getUserDataDir() {
+    return app.getPath('userData');
+}
+
 // Check if this is first run
 function isFirstRun() {
-    const configPath = path.join(__dirname, 'data', 'config.json');
+    const configPath = path.join(getUserDataDir(), 'config.json');
     return !fs.existsSync(configPath);
 }
 
 // Mark as configured
 function markConfigured() {
-    const dataDir = path.join(__dirname, 'data');
+    const dataDir = getUserDataDir();
     const configPath = path.join(dataDir, 'config.json');
     
     if (!fs.existsSync(dataDir)) {
@@ -142,8 +148,11 @@ function startServer() {
     
     expressApp.get('/categories', (req, res) => {
         try {
-            const categoriesPath = path.join(__dirname, 'categories.json');
-            const categories = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'));
+            const categoriesPath = path.join(getUserDataDir(), 'categories.json');
+            let categories = {};
+            if (fs.existsSync(categoriesPath)) {
+                categories = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'));
+            }
             res.json(categories);
         } catch (error) {
             res.status(500).json({ message: error.message });
@@ -152,8 +161,11 @@ function startServer() {
     
     expressApp.post('/categories', (req, res) => {
         try {
-            const categoriesPath = path.join(__dirname, 'categories.json');
-            const categories = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'));
+            const categoriesPath = path.join(getUserDataDir(), 'categories.json');
+            let categories = {};
+            if (fs.existsSync(categoriesPath)) {
+                categories = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'));
+            }
             const { key, category } = req.body;
             categories[key] = category;
             fs.writeFileSync(categoriesPath, JSON.stringify(categories, null, 4));
