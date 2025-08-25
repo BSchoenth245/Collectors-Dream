@@ -1,18 +1,51 @@
 // === APP STARTUP SCRIPT ===
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 console.log('🚀 Starting Collector\'s Dream App...\n');
 
-// === DATABASE SETUP ===
-// Ensure data directory exists
-function ensureDataDirectory() {
-    const dataDir = path.join(__dirname, 'data');
-    if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-        console.log('📁 Created data directory');
-    }
+// === MONGODB MANAGEMENT ===
+// Check if MongoDB is running
+function checkMongoRunning() {
+    return new Promise((resolve) => {
+        exec('pgrep mongod', (error, stdout) => {
+            resolve(!error && stdout.trim());
+        });
+    });
+}
+
+// Check if MongoDB is available
+function checkMongoDB() {
+    return new Promise((resolve) => {
+        exec('mongod --version', (error) => {
+            resolve(!error);
+        });
+    });
+}
+
+// Start MongoDB if not running
+function startMongoDB() {
+    return new Promise((resolve) => {
+        console.log('🔄 Starting MongoDB...');
+        const dataDir = path.join(__dirname, 'data', 'db');
+        
+        // Ensure data directory exists
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+        
+        const mongoProcess = spawn('mongod', ['--dbpath', dataDir], {
+            stdio: 'pipe',
+            detached: true
+        });
+        
+        setTimeout(() => {
+            console.log('✅ MongoDB started');
+            resolve();
+        }, 3000);
+    });
 }
 
 // === APPLICATION SERVER ===
@@ -35,11 +68,25 @@ function startApp() {
 
 // === MAIN START PROCESS ===
 // Main start function
-function start() {
+async function start() {
     try {
-        ensureDataDirectory();
-        console.log('✅ SQLite database ready');
+        const mongoAvailable = await checkMongoDB();
+        
+        if (!mongoAvailable) {
+            console.log('❌ MongoDB not found. Please run "npm run setup" first.');
+            process.exit(1);
+        }
+        
+        const mongoRunning = await checkMongoRunning();
+        
+        if (!mongoRunning) {
+            await startMongoDB();
+        } else {
+            console.log('✅ MongoDB already running');
+        }
+        
         startApp();
+        
     } catch (error) {
         console.error('❌ Failed to start app:', error.message);
         process.exit(1);

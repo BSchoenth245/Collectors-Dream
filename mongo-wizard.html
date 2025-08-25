@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Setup - Collector's Dream</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .wizard-container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+        .status.checking {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .status.found {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        .status.not-found {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .status.installing {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .status.success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .btn.secondary {
+            background: #6c757d;
+        }
+        .btn.secondary:hover {
+            background: #5a6268;
+        }
+        .progress {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #667eea;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .hidden {
+            display: none;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="wizard-container">
+        <div class="logo">📦</div>
+        <h1>Welcome to Collector's Dream</h1>
+        <p class="subtitle">Setting up your database...</p>
+        
+        <div id="status" class="status checking">
+            <div class="spinner"></div>
+            Checking for MongoDB...
+        </div>
+        
+        <div id="progress-container" class="hidden">
+            <div class="progress">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+        </div>
+        
+        <div id="buttons" class="hidden">
+            <button id="install-btn" class="btn">Install MongoDB</button>
+            <button id="skip-btn" class="btn secondary">Skip (Manual Install)</button>
+        </div>
+        
+        <div id="continue-btn-container" class="hidden">
+            <button id="continue-btn" class="btn">Continue to App</button>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        
+        const statusEl = document.getElementById('status');
+        const buttonsEl = document.getElementById('buttons');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const continueContainer = document.getElementById('continue-btn-container');
+        const installBtn = document.getElementById('install-btn');
+        const skipBtn = document.getElementById('skip-btn');
+        const continueBtn = document.getElementById('continue-btn');
+        
+        // Check MongoDB status on load
+        window.addEventListener('DOMContentLoaded', () => {
+            ipcRenderer.send('check-mongodb');
+        });
+        
+        // Handle MongoDB check result
+        ipcRenderer.on('mongodb-status', (event, { found, error }) => {
+            if (found) {
+                statusEl.className = 'status found';
+                statusEl.innerHTML = '✅ MongoDB found! Ready to start.';
+                continueContainer.classList.remove('hidden');
+            } else {
+                statusEl.className = 'status not-found';
+                statusEl.innerHTML = '❌ MongoDB not found. Installation required.';
+                buttonsEl.classList.remove('hidden');
+            }
+        });
+        
+        // Handle install button
+        installBtn.addEventListener('click', () => {
+            statusEl.className = 'status installing';
+            statusEl.innerHTML = '<div class="spinner"></div>Installing MongoDB...';
+            buttonsEl.classList.add('hidden');
+            progressContainer.classList.remove('hidden');
+            
+            ipcRenderer.send('install-mongodb');
+        });
+        
+        // Handle installation progress
+        ipcRenderer.on('install-progress', (event, { progress, message }) => {
+            progressBar.style.width = progress + '%';
+            statusEl.innerHTML = `<div class="spinner"></div>${message}`;
+        });
+        
+        // Handle installation result
+        ipcRenderer.on('install-result', (event, { success, error }) => {
+            progressContainer.classList.add('hidden');
+            
+            if (success) {
+                statusEl.className = 'status success';
+                statusEl.innerHTML = '✅ MongoDB installed successfully!';
+                continueContainer.classList.remove('hidden');
+            } else {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = `❌ Installation failed: ${error}`;
+                buttonsEl.classList.remove('hidden');
+            }
+        });
+        
+        // Handle skip button
+        skipBtn.addEventListener('click', () => {
+            ipcRenderer.send('skip-mongodb');
+        });
+        
+        // Handle continue button
+        continueBtn.addEventListener('click', () => {
+            ipcRenderer.send('continue-to-app');
+        });
+    </script>
+</body>
+</html>

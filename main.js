@@ -1,10 +1,34 @@
 // === ELECTRON MAIN PROCESS ===
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const AppUpdater = require('./updater');
+const MongoInstaller = require('./mongo-installer');
 
 let mainWindow;
+let wizardWindow;
 let server;
+const installer = new MongoInstaller();
+
+// Create MongoDB setup wizard
+function createWizard() {
+    wizardWindow = new BrowserWindow({
+        width: 600,
+        height: 500,
+        resizable: false,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        },
+        icon: path.join(__dirname, 'assets', 'colored-logo.png')
+    });
+
+    wizardWindow.loadFile('mongo-wizard.html');
+    
+    wizardWindow.on('closed', () => {
+        wizardWindow = null;
+    });
+}
 
 // Create main application window
 function createWindow() {
@@ -32,6 +56,24 @@ function createWindow() {
             server.close();
         }
     });
+}
+
+// Check if this is first run
+function isFirstRun() {
+    const configPath = path.join(__dirname, 'data', 'config.json');
+    return !fs.existsSync(configPath);
+}
+
+// Mark as configured
+function markConfigured() {
+    const dataDir = path.join(__dirname, 'data');
+    const configPath = path.join(dataDir, 'config.json');
+    
+    if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+    }
+    
+    fs.writeFileSync(configPath, JSON.stringify({ configured: true, timestamp: Date.now() }));
 }
 
 // === EMBEDDED SERVER ===
@@ -133,9 +175,42 @@ function startServer() {
     });
 }
 
-// === ELECTRON APP LIFECYCLE ===
-app.whenReady().then(() => {
+// === IPC HANDLERS ===
+ipcMain.on('check-mongodb', async (event) => {
+    const result = await installer.checkMongoDB();
+    event.reply('mongodb-status', result);
+});
+
+ipcMain.on('install-mongodb', async (event) => {
+    const result = await installer.installMongoDB((progress) => {
+        event.reply('install-progress', progress);
+    });
+    event.reply('install-result', result);
+});
+
+ipcMain.on('skip-mongodb', (event) => {
+    markConfigured();
+    if (wizardWindow) {
+        wizardWindow.close();
+    }
     createWindow();
+});
+
+ipcMain.on('continue-to-app', (event) => {
+    markConfigured();
+    if (wizardWindow) {
+        wizardWindow.close();
+    }
+    createWindow();
+});
+
+// === ELECTRON APP LIFECYCLE ===
+app.whenReady().then(async () => {
+    if (isFirstRun()) {
+        createWizard();
+    } else {
+        createWindow();
+    }
     new AppUpdater();
 });
 
