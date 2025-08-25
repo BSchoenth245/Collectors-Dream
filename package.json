@@ -9,9 +9,8 @@
     "desktop": "electron .",
     "setup": "node setup.js",
     "build": "electron-builder --win --linux",
-    "build-win": "electron-builder --win --x64",
-    "build-linux": "electron-builder --linux --x64",
-    "build-win-fast": "node build-fast.js",
+    "build-win": "electron-builder --win",
+    "build-linux": "electron-builder --linux",
     "release": "electron-builder --win --linux --publish=always"
   },
   "author": {
@@ -37,22 +36,24 @@
       "output": "dist"
     },
     "files": [
-      "*.js",
-      "*.html",
-      "*.json",
+      "main.js",
+      "server.js",
+      "updater.js",
+      "mongo-installer.js",
+      "index.html",
+      "mongo-wizard.html",
+      "app.js",
+      "styles.css",
+      "categories.json",
       "assets/colored-logo.png",
       "node_modules/**/*",
-      "!node_modules/**/test{,s}/**/*",
-      "!node_modules/**/{docs,doc,documentation}/**/*",
-      "!node_modules/**/{example,examples}/**/*",
-      "!node_modules/**/{benchmark,benchmarks}/**/*",
-      "!node_modules/**/*.{md,txt,map}",
+      "!node_modules/**/test/**/*",
+      "!node_modules/**/tests/**/*",
+      "!node_modules/**/*.md",
       "!node_modules/**/LICENSE*",
       "!node_modules/**/CHANGELOG*",
-      "!node_modules/**/.{git,github}/**/*",
       "!data/**/*",
-      "!dist/**/*",
-      "!**/*.{ts,coffee}"
+      "!dist/**/*"
     ],
     "publish": {
       "provider": "github",
@@ -72,11 +73,11 @@
         "target": "AppImage",
         "arch": ["x64"]
       },
-      "icon": "build/icon.png",
+      "icon": "assets/colored-logo.png",
       "category": "Utility",
       "artifactName": "${productName}-${version}.${ext}"
     },
-    "compression": "maximum",
+    "compression": "store",
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
@@ -85,14 +86,10 @@
       "differentialPackage": false,
       "runAfterFinish": false,
       "packElevateHelper": false,
-      "perMachine": false,
-      "warningsAsErrors": false
+      "perMachine": false
     },
+    "forceCodeSigning": false,
     "nodeGypRebuild": false,
-    "buildDependenciesFromSource": false,
-    "npmRebuild": false,
-    "electronDownload": {
-      "cache": ".electron"
-    }
+    "buildDependenciesFromSource": false
   }
 }
