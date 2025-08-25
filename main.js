@@ -126,7 +126,8 @@ function startServer(fnCallback) {
     
     // Middleware
     objExpressApp.use(cors());
-    objExpressApp.use(express.json());
+    objExpressApp.use(express.json({ limit: '10mb' }));
+    objExpressApp.use(express.urlencoded({ limit: '10mb', extended: true }));
     
     const strMongoURI = 'mongodb://127.0.0.1:27017/CollectorDream';
     mongoose.connect(strMongoURI, {
