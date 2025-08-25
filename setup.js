@@ -23,10 +23,10 @@ function checkMongoDB() {
 
 // Show MongoDB installation instructions
 function showMongoDBInstructions() {
-    const strPlatform = os.platform();
+    const platform = os.platform();
     console.log('\n📋 MongoDB Installation Required\n');
     
-    if (strPlatform === 'win32') {
+    if (platform === 'win32') {
         console.log('🪟 Windows Installation:');
         console.log('1. Download MongoDB Community Server:');
         console.log('   https://www.mongodb.com/try/download/community');
@@ -37,7 +37,7 @@ function showMongoDBInstructions() {
         console.log('   ✓ Check "Run service as Network Service user"');
         console.log('4. After installation, restart your computer');
         console.log('5. Run "npm run setup" again\n');
-    } else if (strPlatform === 'linux') {
+    } else if (platform === 'linux') {
         console.log('🐧 Linux Installation:');
         console.log('Ubuntu/Debian:');
         console.log('  sudo apt-get update');
@@ -48,7 +48,7 @@ function showMongoDBInstructions() {
         console.log('  sudo yum install -y mongodb-server');
         console.log('  sudo systemctl start mongod');
         console.log('  sudo systemctl enable mongod\n');
-    } else if (strPlatform === 'darwin') {
+    } else if (platform === 'darwin') {
         console.log('🍎 macOS Installation:');
         console.log('Using Homebrew:');
         console.log('  brew tap mongodb/brew');
@@ -64,9 +64,9 @@ function showMongoDBInstructions() {
 
 // Create MongoDB data directory
 function createDataDir() {
-    const strDataDir = path.join(__dirname, 'data', 'db');
-    if (!fs.existsSync(strDataDir)) {
-        fs.mkdirSync(strDataDir, { recursive: true });
+    const dataDir = path.join(__dirname, 'data', 'db');
+    if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
         console.log('✅ Created MongoDB data directory');
     }
 }
@@ -80,8 +80,8 @@ function installDependencies() {
             stdio: 'inherit'
         });
         
-        npmProcess.on('close', (intCode) => {
-            if (intCode === 0) {
+        npmProcess.on('close', (code) => {
+            if (code === 0) {
                 console.log('✅ Dependencies installed successfully');
                 resolve(true);
             } else {
@@ -96,8 +96,8 @@ function installDependencies() {
 // Run complete setup process
 async function setup() {
     try {
-        const objMongoInfo = await checkMongoDB();
-        if (!objMongoInfo.found) {
+        const mongoInfo = await checkMongoDB();
+        if (!mongoInfo.found) {
             console.log('❌ MongoDB is required but not found on your system.');
             showMongoDBInstructions();
             console.log('\nPlease install MongoDB and run "npm run setup" again.');
@@ -107,8 +107,8 @@ async function setup() {
         console.log('✅ MongoDB found - proceeding with setup...');
         createDataDir();
         
-        const boolDepsInstalled = await installDependencies();
-        if (!boolDepsInstalled) {
+        const depsInstalled = await installDependencies();
+        if (!depsInstalled) {
             process.exit(1);
         }
 

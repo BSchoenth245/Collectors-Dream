@@ -2,8 +2,8 @@
 // Fetch and display all collection data in table
 function fetchAndDisplayData() {
     // First check if table exists
-    const elmTable = document.getElementById('dataTable');
-    if (!elmTable) {
+    const table = document.getElementById('dataTable');
+    if (!table) {
         console.error('Table element not found');
         return;
     }
@@ -20,61 +20,61 @@ function fetchAndDisplayData() {
         }
         return response.json();
     })
-    .then(arrData => {
+    .then(data => {
         // Clear existing table
-        elmTable.innerHTML = '';
+        table.innerHTML = '';
 
         // Get all unique keys from data
-        const setAllKeys = new Set();
-        arrData.forEach(objItem => {
-            Object.keys(objItem).forEach(strKey => {
-                if (strKey !== '_id' && strKey !== '__v') {
-                    setAllKeys.add(strKey);
+        const allKeys = new Set();
+        data.forEach(item => {
+            Object.keys(item).forEach(key => {
+                if (key !== '_id' && key !== '__v') {
+                    allKeys.add(key);
                 }
             });
         });
-        const arrHeaders = [...setAllKeys, 'Actions'];
+        const headers = [...allKeys, 'Actions'];
 
         // Create table header
-        const elmThead = document.createElement('thead');
-        const elmHeaderRow = document.createElement('tr');
-        arrHeaders.forEach(strHeaderText => {
-            const elmTh = document.createElement('th');
-            elmTh.textContent = strHeaderText.charAt(0).toUpperCase() + strHeaderText.slice(1);
-            elmHeaderRow.appendChild(elmTh);
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText.charAt(0).toUpperCase() + headerText.slice(1);
+            headerRow.appendChild(th);
         });
-        elmThead.appendChild(elmHeaderRow);
-        elmTable.appendChild(elmThead);
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
 
         // Create table body
-        const elmTbody = document.createElement('tbody');
+        const tbody = document.createElement('tbody');
         
         // Populate table with data
-        arrData.forEach(objItem => {
-            const elmRow = document.createElement('tr');
-            arrHeaders.forEach(strHeader => {
-                const elmCell = document.createElement('td');
-                if (strHeader === 'Actions') {
-                    elmCell.innerHTML = `<button onclick="deleteRecord('${objItem._id}')">Delete</button>`;
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            headers.forEach(header => {
+                const cell = document.createElement('td');
+                if (header === 'Actions') {
+                    cell.innerHTML = `<button onclick="deleteRecord('${item._id}')">Delete</button>`;
                 } else {
-                    elmCell.textContent = objItem[strHeader] || 'N/A';
+                    cell.textContent = item[header] || 'N/A';
                 }
-                elmRow.appendChild(elmCell);
+                row.appendChild(cell);
             });
-            elmTbody.appendChild(elmRow);
+            tbody.appendChild(row);
         });
         
-        elmTable.appendChild(elmTbody);
+        table.appendChild(tbody);
     })
     .catch(error => {
         console.error('Error fetching data:', error);
         // Create a more user-friendly error message
-        const elmErrorMessage = document.createElement('div');
-        elmErrorMessage.className = 'error-message';
-        elmErrorMessage.textContent = `Unable to fetch data: ${error.message}`;
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'error-message';
+        errorMessage.textContent = `Unable to fetch data: ${error.message}`;
         // If table exists, insert error message before it
-        if (elmTable) {
-            elmTable.parentNode.insertBefore(elmErrorMessage, elmTable);
+        if (table) {
+            table.parentNode.insertBefore(errorMessage, table);
         }
     });
 }
@@ -83,15 +83,15 @@ function fetchAndDisplayData() {
 // Ensure DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Check if table exists
-    const elmTable = document.getElementById('dataTable');
-    if (!elmTable) {
+    const table = document.getElementById('dataTable');
+    if (!table) {
         console.error('Table element not found. Creating table element...');
-        const elmTableContainer = document.createElement('div');
-        elmTableContainer.className = 'table-container';
-        const elmNewTable = document.createElement('table');
-        elmNewTable.id = 'dataTable';
-        elmTableContainer.appendChild(elmNewTable);
-        document.body.appendChild(elmTableContainer);
+        const tableContainer = document.createElement('div');
+        tableContainer.className = 'table-container';
+        const newTable = document.createElement('table');
+        newTable.id = 'dataTable';
+        tableContainer.appendChild(newTable);
+        document.body.appendChild(tableContainer);
     }
 });
 
@@ -102,8 +102,8 @@ function refreshTable() {
 }
 
 // Delete specific record by ID
-function deleteRecord(strId) {
-    fetch(`http://127.0.0.1:8000/collection/${strId}`, {
+function deleteRecord(id) {
+    fetch(`http://127.0.0.1:8000/collection/${id}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
@@ -126,97 +126,97 @@ function deleteRecord(strId) {
 }
 
 // === CATEGORY MANAGEMENT ===
-let objCategories = {};
+let categories = {};
 
 // Load categories from server on page load
 fetch('http://127.0.0.1:8000/categories')
 .then(response => response.json())
-.then(objData => {
-    objCategories = objData;
+.then(data => {
+    categories = data;
     populateCategoryDropdowns();
 })
 .catch(error => console.error('Error loading categories:', error));
 
 // Populate dropdown menus with available categories
 function populateCategoryDropdowns() {
-    const elmCategorySelect = document.getElementById('categorySelect');
-    const elmSearchSelect = document.getElementById('searchCategorySelect');
-    const elmEditSelect = document.getElementById('editCategorySelect');
-    const elmDeleteSelect = document.getElementById('deleteCategorySelect');
+    const categorySelect = document.getElementById('categorySelect');
+    const searchSelect = document.getElementById('searchCategorySelect');
+    const editSelect = document.getElementById('editCategorySelect');
+    const deleteSelect = document.getElementById('deleteCategorySelect');
     
     // Clear existing options except first
-    elmCategorySelect.innerHTML = '<option value="">Choose a category...</option>';
-    elmSearchSelect.innerHTML = '<option value="">Choose a category...</option>';
-    elmEditSelect.innerHTML = '<option value="">Choose a category...</option>';
-    elmDeleteSelect.innerHTML = '<option value="">Choose a category...</option>';
+    categorySelect.innerHTML = '<option value="">Choose a category...</option>';
+    searchSelect.innerHTML = '<option value="">Choose a category...</option>';
+    editSelect.innerHTML = '<option value="">Choose a category...</option>';
+    deleteSelect.innerHTML = '<option value="">Choose a category...</option>';
     
     // Add categories from JSON
-    Object.keys(objCategories).forEach(strKey => {
-        const elmOption1 = document.createElement('option');
-        elmOption1.value = strKey;
-        elmOption1.textContent = objCategories[strKey].name;
-        elmCategorySelect.appendChild(elmOption1);
+    Object.keys(categories).forEach(key => {
+        const option1 = document.createElement('option');
+        option1.value = key;
+        option1.textContent = categories[key].name;
+        categorySelect.appendChild(option1);
         
-        const elmOption2 = document.createElement('option');
-        elmOption2.value = strKey;
-        elmOption2.textContent = objCategories[strKey].name;
-        elmSearchSelect.appendChild(elmOption2);
+        const option2 = document.createElement('option');
+        option2.value = key;
+        option2.textContent = categories[key].name;
+        searchSelect.appendChild(option2);
         
-        const elmOption3 = document.createElement('option');
-        elmOption3.value = strKey;
-        elmOption3.textContent = objCategories[strKey].name;
-        elmEditSelect.appendChild(elmOption3);
+        const option3 = document.createElement('option');
+        option3.value = key;
+        option3.textContent = categories[key].name;
+        editSelect.appendChild(option3);
         
-        const elmOption4 = document.createElement('option');
-        elmOption4.value = strKey;
-        elmOption4.textContent = objCategories[strKey].name;
-        elmDeleteSelect.appendChild(elmOption4);
+        const option4 = document.createElement('option');
+        option4.value = key;
+        option4.textContent = categories[key].name;
+        deleteSelect.appendChild(option4);
     });
 }
 
 // Load form fields based on selected category
 function loadCategoryForm() {
-    const elmCategorySelect = document.getElementById('categorySelect');
-    const elmDataForm = document.getElementById('dataForm');
-    const elmFormFields = document.getElementById('formFields');
+    const categorySelect = document.getElementById('categorySelect');
+    const dataForm = document.getElementById('dataForm');
+    const formFields = document.getElementById('formFields');
     
-    const strSelectedCategory = elmCategorySelect.value;
+    const selectedCategory = categorySelect.value;
     
-    if (!strSelectedCategory) {
-        elmDataForm.style.display = 'none';
+    if (!selectedCategory) {
+        dataForm.style.display = 'none';
         return;
     }
     
-    const objCategory = objCategories[strSelectedCategory];
-    elmFormFields.innerHTML = '';
+    const category = categories[selectedCategory];
+    formFields.innerHTML = '';
     
-    objCategory.fields.forEach(objField => {
-        const elmFieldDiv = document.createElement('div');
-        elmFieldDiv.className = 'mb-3';
-        const strInputType = objField.type === 'number' ? 'text' : objField.type;
-        const strInputPattern = objField.type === 'number' ? 'pattern="[0-9]*"' : '';
-        elmFieldDiv.innerHTML = `
-            <label class="form-label">${objField.label}:</label>
-            <input type="${strInputType}" ${strInputPattern} class="form-control" name="${objField.name}" required>
+    category.fields.forEach(field => {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'mb-3';
+        const inputType = field.type === 'number' ? 'text' : field.type;
+        const inputPattern = field.type === 'number' ? 'pattern="[0-9]*"' : '';
+        fieldDiv.innerHTML = `
+            <label class="form-label">${field.label}:</label>
+            <input type="${inputType}" ${inputPattern} class="form-control" name="${field.name}" required>
         `;
-        elmFormFields.appendChild(elmFieldDiv);
+        formFields.appendChild(fieldDiv);
     });
     
-    elmDataForm.style.display = 'block';
+    dataForm.style.display = 'block';
 }
 
 // Submit new item data to database
 function submitCategoryData() {
-    const elmFormFields = document.getElementById('formFields');
-    const elmInputs = elmFormFields.querySelectorAll('input');
-    const objData = {};
+    const formFields = document.getElementById('formFields');
+    const inputs = formFields.querySelectorAll('input');
+    const data = {};
     
-    elmInputs.forEach(elmInput => {
-        let value = elmInput.value;
-        if (elmInput.type === 'number') {
+    inputs.forEach(input => {
+        let value = input.value;
+        if (input.type === 'number') {
             value = Number(value);
         }
-        objData[elmInput.name] = value;
+        data[input.name] = value;
     });
     
     fetch('http://127.0.0.1:8000/collection', {
@@ -224,12 +224,12 @@ function submitCategoryData() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(objData)
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
-    .then(objResult => {
+    .then(result => {
         Swal.fire('Success!', 'Data saved successfully!', 'success');
-        elmInputs.forEach(elmInput => elmInput.value = '');
+        inputs.forEach(input => input.value = '');
         refreshTable();
     })
     .catch(error => {
@@ -238,7 +238,7 @@ function submitCategoryData() {
 }
 
 // === CATEGORY MANAGEMENT ===
-let intNewFieldCount = 0;
+let newFieldCount = 0;
 
 // Show form to create new category
 function showAddCategoryForm() {
@@ -286,35 +286,35 @@ function cancelDeleteCategory() {
 
 // Delete selected category
 function deleteCategory() {
-    const elmDeleteSelect = document.getElementById('deleteCategorySelect');
-    const strCategoryKey = elmDeleteSelect.value;
+    const deleteSelect = document.getElementById('deleteCategorySelect');
+    const categoryKey = deleteSelect.value;
     
-    if (!strCategoryKey) {
+    if (!categoryKey) {
         Swal.fire('Warning!', 'Please select a category to delete', 'warning');
         return;
     }
     
-    const strCategoryName = objCategories[strCategoryKey].name;
+    const categoryName = categories[categoryKey].name;
     
     Swal.fire({
         title: 'Are you sure?',
-        text: `Delete category "${strCategoryName}"? This cannot be undone!`,
+        text: `Delete category "${categoryName}"? This cannot be undone!`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#3085d6',
         confirmButtonText: 'Yes, delete it!'
-    }).then((objResult) => {
-        if (objResult.isConfirmed) {
-            fetch(`http://127.0.0.1:8000/categories/${strCategoryKey}`, {
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`http://127.0.0.1:8000/categories/${categoryKey}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                 }
             })
             .then(response => response.json())
-            .then(objResult => {
-                delete objCategories[strCategoryKey];
+            .then(result => {
+                delete categories[categoryKey];
                 populateCategoryDropdowns();
                 cancelDeleteCategory();
                 Swal.fire('Deleted!', 'Category has been deleted.', 'success');
@@ -328,10 +328,10 @@ function deleteCategory() {
 
 // Add new field to category creation form
 function addNewField() {
-    const elmFieldsContainer = document.getElementById('newCategoryFields');
-    const elmFieldDiv = document.createElement('div');
-    elmFieldDiv.className = 'mb-2 d-flex gap-2';
-    elmFieldDiv.innerHTML = `
+    const fieldsContainer = document.getElementById('newCategoryFields');
+    const fieldDiv = document.createElement('div');
+    fieldDiv.className = 'mb-2 d-flex gap-2';
+    fieldDiv.innerHTML = `
         <input type="text" placeholder="Field Name" class="form-control">
         <select class="form-select">
             <option value="text">Text</option>
@@ -339,52 +339,52 @@ function addNewField() {
         </select>
         <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">Remove</button>
     `;
-    elmFieldsContainer.appendChild(elmFieldDiv);
-    intNewFieldCount++;
+    fieldsContainer.appendChild(fieldDiv);
+    newFieldCount++;
 }
 
 // Load category data for editing
 function loadEditCategoryForm() {
-    const elmEditSelect = document.getElementById('editCategorySelect');
-    const elmEditContent = document.getElementById('editCategoryContent');
-    const elmEditNameInput = document.getElementById('editCategoryName');
-    const elmEditFieldsContainer = document.getElementById('editCategoryFields');
+    const editSelect = document.getElementById('editCategorySelect');
+    const editContent = document.getElementById('editCategoryContent');
+    const editNameInput = document.getElementById('editCategoryName');
+    const editFieldsContainer = document.getElementById('editCategoryFields');
     
-    const strSelectedKey = elmEditSelect.value;
+    const selectedKey = editSelect.value;
     
-    if (!strSelectedKey) {
-        elmEditContent.style.display = 'none';
+    if (!selectedKey) {
+        editContent.style.display = 'none';
         return;
     }
     
-    const objCategory = objCategories[strSelectedKey];
-    elmEditNameInput.value = objCategory.name;
-    elmEditFieldsContainer.innerHTML = '';
+    const category = categories[selectedKey];
+    editNameInput.value = category.name;
+    editFieldsContainer.innerHTML = '';
     
     // Populate existing fields
-    objCategory.fields.forEach(objField => {
-        const elmFieldDiv = document.createElement('div');
-        elmFieldDiv.className = 'mb-2 d-flex gap-2';
-        elmFieldDiv.innerHTML = `
-            <input type="text" value="${objField.label}" class="form-control">
+    category.fields.forEach(field => {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'mb-2 d-flex gap-2';
+        fieldDiv.innerHTML = `
+            <input type="text" value="${field.label}" class="form-control">
             <select class="form-select">
-                <option value="text" ${objField.type === 'text' ? 'selected' : ''}>Text</option>
-                <option value="number" ${objField.type === 'number' ? 'selected' : ''}>Number</option>
+                <option value="text" ${field.type === 'text' ? 'selected' : ''}>Text</option>
+                <option value="number" ${field.type === 'number' ? 'selected' : ''}>Number</option>
             </select>
             <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">Remove</button>
         `;
-        elmEditFieldsContainer.appendChild(elmFieldDiv);
+        editFieldsContainer.appendChild(fieldDiv);
     });
     
-    elmEditContent.style.display = 'block';
+    editContent.style.display = 'block';
 }
 
 // Add new field to edit form
 function addEditField() {
-    const elmFieldsContainer = document.getElementById('editCategoryFields');
-    const elmFieldDiv = document.createElement('div');
-    elmFieldDiv.className = 'mb-2 d-flex gap-2';
-    elmFieldDiv.innerHTML = `
+    const fieldsContainer = document.getElementById('editCategoryFields');
+    const fieldDiv = document.createElement('div');
+    fieldDiv.className = 'mb-2 d-flex gap-2';
+    fieldDiv.innerHTML = `
         <input type="text" placeholder="Field Name" class="form-control">
         <select class="form-select">
             <option value="text">Text</option>
@@ -392,42 +392,42 @@ function addEditField() {
         </select>
         <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">Remove</button>
     `;
-    elmFieldsContainer.appendChild(elmFieldDiv);
+    fieldsContainer.appendChild(fieldDiv);
 }
 
 // Save edited category
 function saveEditCategory() {
-    const elmEditSelect = document.getElementById('editCategorySelect');
-    const strCategoryName = document.getElementById('editCategoryName').value;
-    const elmFieldDivs = document.getElementById('editCategoryFields').children;
+    const editSelect = document.getElementById('editCategorySelect');
+    const categoryName = document.getElementById('editCategoryName').value;
+    const fieldDivs = document.getElementById('editCategoryFields').children;
     
-    if (!strCategoryName) {
+    if (!categoryName) {
         Swal.fire('Warning!', 'Please enter a category name', 'warning');
         return;
     }
     
-    const arrFields = [];
-    for (let elmDiv of elmFieldDivs) {
-        const elmNameInput = elmDiv.querySelector('input[type="text"]');
-        const elmTypeSelect = elmDiv.querySelector('select');
-        if (elmNameInput.value) {
-            arrFields.push({
-                name: elmNameInput.value.toLowerCase().replace(/\s+/g, '_'),
-                label: elmNameInput.value,
-                type: elmTypeSelect.value
+    const fields = [];
+    for (let div of fieldDivs) {
+        const nameInput = div.querySelector('input[type="text"]');
+        const typeSelect = div.querySelector('select');
+        if (nameInput.value) {
+            fields.push({
+                name: nameInput.value.toLowerCase().replace(/\s+/g, '_'),
+                label: nameInput.value,
+                type: typeSelect.value
             });
         }
     }
     
-    if (arrFields.length === 0) {
+    if (fields.length === 0) {
         Swal.fire('Warning!', 'Please add at least one field', 'warning');
         return;
     }
     
-    const strCategoryKey = elmEditSelect.value;
-    const objUpdatedCategory = {
-        name: strCategoryName,
-        fields: arrFields
+    const categoryKey = editSelect.value;
+    const updatedCategory = {
+        name: categoryName,
+        fields: fields
     };
     
     // Save to server
@@ -436,11 +436,11 @@ function saveEditCategory() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ key: strCategoryKey, category: objUpdatedCategory })
+        body: JSON.stringify({ key: categoryKey, category: updatedCategory })
     })
     .then(response => response.json())
-    .then(objResult => {
-        objCategories[strCategoryKey] = objUpdatedCategory;
+    .then(result => {
+        categories[categoryKey] = updatedCategory;
         populateCategoryDropdowns();
         cancelEditCategory();
         Swal.fire('Success!', 'Category updated successfully!', 'success');
@@ -452,36 +452,36 @@ function saveEditCategory() {
 
 // Save new category to server
 function saveNewCategory() {
-    const strCategoryName = document.getElementById('newCategoryName').value;
-    const elmFieldDivs = document.getElementById('newCategoryFields').children;
+    const categoryName = document.getElementById('newCategoryName').value;
+    const fieldDivs = document.getElementById('newCategoryFields').children;
     
-    if (!strCategoryName) {
+    if (!categoryName) {
         Swal.fire('Warning!', 'Please enter a category name', 'warning');
         return;
     }
     
-    const arrFields = [];
-    for (let elmDiv of elmFieldDivs) {
-        const elmNameInput = elmDiv.querySelector('input[type="text"]');
-        const elmTypeSelect = elmDiv.querySelector('select');
-        if (elmNameInput.value) {
-            arrFields.push({
-                name: elmNameInput.value.toLowerCase().replace(/\s+/g, '_'),
-                label: elmNameInput.value,
-                type: elmTypeSelect.value
+    const fields = [];
+    for (let div of fieldDivs) {
+        const nameInput = div.querySelector('input[type="text"]');
+        const typeSelect = div.querySelector('select');
+        if (nameInput.value) {
+            fields.push({
+                name: nameInput.value.toLowerCase().replace(/\s+/g, '_'),
+                label: nameInput.value,
+                type: typeSelect.value
             });
         }
     }
     
-    if (arrFields.length === 0) {
+    if (fields.length === 0) {
         Swal.fire('Warning!', 'Please add at least one field', 'warning');
         return;
     }
     
-    const strCategoryKey = strCategoryName.toLowerCase().replace(/\s+/g, '_');
-    const objNewCategory = {
-        name: strCategoryName,
-        fields: arrFields
+    const categoryKey = categoryName.toLowerCase().replace(/\s+/g, '_');
+    const newCategory = {
+        name: categoryName,
+        fields: fields
     };
     
     // Save to server
@@ -490,11 +490,11 @@ function saveNewCategory() {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ key: strCategoryKey, category: objNewCategory })
+        body: JSON.stringify({ key: categoryKey, category: newCategory })
     })
     .then(response => response.json())
-    .then(objResult => {
-        objCategories[strCategoryKey] = objNewCategory;
+    .then(result => {
+        categories[categoryKey] = newCategory;
         populateCategoryDropdowns();
         cancelAddCategory();
         Swal.fire('Success!', 'Category saved successfully!', 'success');
@@ -507,30 +507,30 @@ function saveNewCategory() {
 // === SEARCH & FILTER ===
 // Filter table data by selected category
 function filterByCategory() {
-    const elmCategorySelect = document.getElementById('searchCategorySelect');
-    const strSelectedCategory = elmCategorySelect.value;
+    const categorySelect = document.getElementById('searchCategorySelect');
+    const selectedCategory = categorySelect.value;
     
-    if (!strSelectedCategory) {
+    if (!selectedCategory) {
         // Clear table if no category selected
-        const elmTable = document.getElementById('dataTable');
-        elmTable.innerHTML = '';
+        const table = document.getElementById('dataTable');
+        table.innerHTML = '';
         return;
     }
     
     // Fetch and filter data by category
     fetch('http://127.0.0.1:8000/collection')
     .then(response => response.json())
-    .then(arrData => {
-        const objCategory = objCategories[strSelectedCategory];
-        const arrCategoryFields = objCategory.fields.map(objF => objF.name);
+    .then(data => {
+        const category = categories[selectedCategory];
+        const categoryFields = category.fields.map(f => f.name);
         
         // Filter data to only show items that have MOST fields from this category
-        const arrFilteredData = arrData.filter(objItem => {
-            const arrMatchingFields = arrCategoryFields.filter(strField => objItem.hasOwnProperty(strField));
-            return arrMatchingFields.length >= Math.ceil(arrCategoryFields.length * 0.6);
+        const filteredData = data.filter(item => {
+            const matchingFields = categoryFields.filter(field => item.hasOwnProperty(field));
+            return matchingFields.length >= Math.ceil(categoryFields.length * 0.6);
         });
         
-        displayFilteredData(arrFilteredData);
+        displayFilteredData(filteredData);
     })
     .catch(error => {
         console.error('Error fetching data:', error);
@@ -538,51 +538,51 @@ function filterByCategory() {
 }
 
 // Display filtered data in table
-function displayFilteredData(arrData) {
-    const elmTable = document.getElementById('dataTable');
-    elmTable.innerHTML = '';
+function displayFilteredData(data) {
+    const table = document.getElementById('dataTable');
+    table.innerHTML = '';
     
-    if (arrData.length === 0) {
-        elmTable.innerHTML = '<p>No data found for this category.</p>';
+    if (data.length === 0) {
+        table.innerHTML = '<p>No data found for this category.</p>';
         return;
     }
     
     // Get all unique keys from filtered data
-    const setAllKeys = new Set();
-    arrData.forEach(objItem => {
-        Object.keys(objItem).forEach(strKey => {
-            if (strKey !== '_id' && strKey !== '__v') {
-                setAllKeys.add(strKey);
+    const allKeys = new Set();
+    data.forEach(item => {
+        Object.keys(item).forEach(key => {
+            if (key !== '_id' && key !== '__v') {
+                allKeys.add(key);
             }
         });
     });
-    const arrHeaders = [...setAllKeys, 'Actions'];
+    const headers = [...allKeys, 'Actions'];
     
     // Create table header
-    const elmThead = document.createElement('thead');
-    const elmHeaderRow = document.createElement('tr');
-    arrHeaders.forEach(strHeaderText => {
-        const elmTh = document.createElement('th');
-        elmTh.textContent = strHeaderText.charAt(0).toUpperCase() + strHeaderText.slice(1);
-        elmHeaderRow.appendChild(elmTh);
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headers.forEach(headerText => {
+        const th = document.createElement('th');
+        th.textContent = headerText.charAt(0).toUpperCase() + headerText.slice(1);
+        headerRow.appendChild(th);
     });
-    elmThead.appendChild(elmHeaderRow);
-    elmTable.appendChild(elmThead);
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
     
     // Create table body
-    const elmTbody = document.createElement('tbody');
-    arrData.forEach(objItem => {
-        const elmRow = document.createElement('tr');
-        arrHeaders.forEach(strHeader => {
-            const elmCell = document.createElement('td');
-            if (strHeader === 'Actions') {
-                elmCell.innerHTML = `<button onclick="deleteRecord('${objItem._id}')">Delete</button>`;
+    const tbody = document.createElement('tbody');
+    data.forEach(item => {
+        const row = document.createElement('tr');
+        headers.forEach(header => {
+            const cell = document.createElement('td');
+            if (header === 'Actions') {
+                cell.innerHTML = `<button onclick="deleteRecord('${item._id}')">Delete</button>`;
             } else {
-                elmCell.textContent = objItem[strHeader] || 'N/A';
+                cell.textContent = item[header] || 'N/A';
             }
-            elmRow.appendChild(elmCell);
+            row.appendChild(cell);
         });
-        elmTbody.appendChild(elmRow);
+        tbody.appendChild(row);
     });
-    elmTable.appendChild(elmTbody);
+    table.appendChild(tbody);
 }

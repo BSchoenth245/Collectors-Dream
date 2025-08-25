@@ -4,27 +4,20 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
-const intPort = 8000;
+const port = 8000;
 
 // === MIDDLEWARE ===
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json());
 
 // === DATABASE CONNECTION ===
-const strMongoURI = 'mongodb://127.0.0.1:27017/CollectorDream';
-mongoose.connect(strMongoURI, {
+const mongoURI = 'mongodb://127.0.0.1:27017/CollectorDream';
+mongoose.connect(mongoURI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 3000,
-    connectTimeoutMS: 3000,
-    bufferCommands: false
+    useUnifiedTopology: true
 })
 .then(() => console.log('MongoDB connected successfully'))
-.catch(err => {
-    console.log('MongoDB connection error:', err);
-    console.log('App will continue without database connection');
-});
+.catch(err => console.log('MongoDB connection error:', err));
 
 // === DATABASE SCHEMA ===
 const Schema = mongoose.Schema;
@@ -37,8 +30,8 @@ const Data = mongoose.model('Data', dataSchema, 'collection');
 app.get('/collection', async (req, res) => {
     try {
         // Query the collection
-        const arrAllData = await Data.find();
-        res.json(arrAllData);
+        const allData = await Data.find();
+        res.json(allData);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -47,11 +40,11 @@ app.get('/collection', async (req, res) => {
 // Add new collection item
 app.post('/collection', async (req, res) => {
     try {
-        const objNewData = Data(req.body)
+        const newData = Data(req.body)
 
-        const objSavedData = await objNewData.save()
+        const savedData = await newData.save()
 
-        res.status(201).json(objSavedData)
+        res.status(201).json(savedData)
     } catch(err){
         res.status(400).json({message: err.message})
     
@@ -61,17 +54,17 @@ app.post('/collection', async (req, res) => {
 // Delete collection item by ID
 app.delete('/collection/:id', async (req, res) => {
     try {
-        const strId = req.params.id;
+        const id = req.params.id;
         
         // Check if the document exists first
-        const objDocument = await Data.findById(strId);
-        if (!objDocument) {
+        const document = await Data.findById(id);
+        if (!document) {
             return res.status(404).json({ message: "Document not found" });
         }
 
         // Delete the document
-        const objDeletedData = await Data.findByIdAndDelete(strId);
-        res.json({ message: "Document deleted successfully", deletedData: objDeletedData });
+        const deletedData = await Data.findByIdAndDelete(id);
+        res.json({ message: "Document deleted successfully", deletedData });
     } catch (error) {
         // Handle invalid ID format error
         if (error.name === 'CastError') {
@@ -88,9 +81,9 @@ const path = require('path');
 // Get all categories from JSON file
 app.get('/categories', (req, res) => {
     try {
-        const strCategoriesPath = path.join(__dirname, 'categories.json');
-        const objCategories = JSON.parse(fs.readFileSync(strCategoriesPath, 'utf8'));
-        res.json(objCategories);
+        const categoriesPath = path.join(__dirname, 'categories.json');
+        const categories = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'));
+        res.json(categories);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -99,13 +92,13 @@ app.get('/categories', (req, res) => {
 // Save new category to JSON file
 app.post('/categories', (req, res) => {
     try {
-        const strCategoriesPath = path.join(__dirname, 'categories.json');
-        const objCategories = JSON.parse(fs.readFileSync(strCategoriesPath, 'utf8'));
+        const categoriesPath = path.join(__dirname, 'categories.json');
+        const categories = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'));
         
-        const { key: strKey, category: objCategory } = req.body;
-        objCategories[strKey] = objCategory;
+        const { key, category } = req.body;
+        categories[key] = category;
         
-        fs.writeFileSync(strCategoriesPath, JSON.stringify(objCategories, null, 4));
+        fs.writeFileSync(categoriesPath, JSON.stringify(categories, null, 4));
         res.json({ message: 'Category saved successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -115,16 +108,16 @@ app.post('/categories', (req, res) => {
 // Delete category from JSON file
 app.delete('/categories/:key', (req, res) => {
     try {
-        const strCategoriesPath = path.join(__dirname, 'categories.json');
-        const objCategories = JSON.parse(fs.readFileSync(strCategoriesPath, 'utf8'));
-        const { key: strKey } = req.params;
+        const categoriesPath = path.join(__dirname, 'categories.json');
+        const categories = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'));
+        const { key } = req.params;
         
-        if (!objCategories[strKey]) {
+        if (!categories[key]) {
             return res.status(404).json({ message: 'Category not found' });
         }
         
-        delete objCategories[strKey];
-        fs.writeFileSync(strCategoriesPath, JSON.stringify(objCategories, null, 4));
+        delete categories[key];
+        fs.writeFileSync(categoriesPath, JSON.stringify(categories, null, 4));
         res.json({ message: 'Category deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -141,6 +134,6 @@ app.get('/', (req, res) => {
 });
 
 // Start server
-app.listen(intPort, () => {
-    console.log(`Server running on port ${intPort}`);
+app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
 });

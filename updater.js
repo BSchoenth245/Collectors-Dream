@@ -25,8 +25,8 @@ class AppUpdater {
                 title: 'Update ready',
                 message: 'Update downloaded. The application will restart to apply the update.',
                 buttons: ['Restart', 'Later']
-            }).then((objResult) => {
-                if (objResult.response === 0) {
+            }).then((result) => {
+                if (result.response === 0) {
                     autoUpdater.quitAndInstall();
                 }
             });

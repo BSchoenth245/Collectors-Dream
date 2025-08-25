@@ -6,15 +6,14 @@ const os = require('os');
 const AppUpdater = require('./updater');
 const MongoInstaller = require('./mongo-installer');
 
-let objMainWindow;
-let objWizardWindow;
-let objSplashWindow;
-let objServer;
-const objInstaller = new MongoInstaller();
+let mainWindow;
+let wizardWindow;
+let server;
+const installer = new MongoInstaller();
 
 // Create MongoDB setup wizard
 function createWizard() {
-    objWizardWindow = new BrowserWindow({
+    wizardWindow = new BrowserWindow({
         width: 600,
         height: 500,
         resizable: false,
@@ -25,39 +24,18 @@ function createWizard() {
         icon: path.join(__dirname, 'assets', 'colored-logo.png')
     });
 
-    objWizardWindow.loadFile('mongo-wizard.html');
+    wizardWindow.loadFile('mongo-wizard.html');
     
-    objWizardWindow.on('closed', () => {
-        objWizardWindow = null;
+    wizardWindow.on('closed', () => {
+        wizardWindow = null;
     });
-}
-
-// Create splash screen
-function createSplash() {
-    objSplashWindow = new BrowserWindow({
-        width: 400,
-        height: 300,
-        frame: false,
-        alwaysOnTop: true,
-        transparent: true,
-        webPreferences: {
-            nodeIntegration: false,
-            contextIsolation: true
-        },
-        icon: path.join(__dirname, 'assets', 'colored-logo.png')
-    });
-    
-    objSplashWindow.loadFile('splash.html');
 }
 
 // Create main application window
 function createWindow() {
-    createSplash();
-    
-    objMainWindow = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
-        show: false,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true
@@ -65,26 +43,18 @@ function createWindow() {
         icon: path.join(__dirname, 'assets', 'colored-logo.png')
     });
 
-    // Start the Express server and load app when ready
-    startServer(() => {
-        objMainWindow.loadURL('http://localhost:8000');
-        objMainWindow.once('ready-to-show', () => {
-            if (objSplashWindow) {
-                objSplashWindow.close();
-                objSplashWindow = null;
-            }
-            objMainWindow.show();
-        });
-    });
+    // Start the Express server
+    startServer();
 
-    objMainWindow.on('closed', () => {
-        objMainWindow = null;
-        if (objSplashWindow) {
-            objSplashWindow.close();
-            objSplashWindow = null;
-        }
-        if (objServer) {
-            objServer.close();
+    // Load the app
+    setTimeout(() => {
+        mainWindow.loadURL('http://localhost:8000');
+    }, 2000);
+
+    mainWindow.on('closed', () => {
+        mainWindow = null;
+        if (server) {
+            server.close();
         }
     });
 }
@@ -96,45 +66,42 @@ function getUserDataDir() {
 
 // Check if this is first run
 function isFirstRun() {
-    const strConfigPath = path.join(getUserDataDir(), 'config.json');
-    return !fs.existsSync(strConfigPath);
+    const configPath = path.join(getUserDataDir(), 'config.json');
+    return !fs.existsSync(configPath);
 }
 
 // Mark as configured
 function markConfigured() {
-    const strDataDir = getUserDataDir();
-    const strConfigPath = path.join(strDataDir, 'config.json');
+    const dataDir = getUserDataDir();
+    const configPath = path.join(dataDir, 'config.json');
     
-    if (!fs.existsSync(strDataDir)) {
-        fs.mkdirSync(strDataDir, { recursive: true });
+    if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
     }
     
-    fs.writeFileSync(strConfigPath, JSON.stringify({ configured: true, timestamp: Date.now() }));
+    fs.writeFileSync(configPath, JSON.stringify({ configured: true, timestamp: Date.now() }));
 }
 
 // === EMBEDDED SERVER ===
 // Start Express server within Electron
-function startServer(fnCallback) {
+function startServer() {
     // Import and start the server directly
     const express = require('express');
     const mongoose = require('mongoose');
     const cors = require('cors');
     const fs = require('fs');
     
-    const objExpressApp = express();
-    const intPort = 8000;
+    const expressApp = express();
+    const port = 8000;
     
     // Middleware
-    objExpressApp.use(cors());
-    objExpressApp.use(express.json({ limit: '10mb' }));
-    objExpressApp.use(express.urlencoded({ limit: '10mb', extended: true }));
+    expressApp.use(cors());
+    expressApp.use(express.json());
     
-    const strMongoURI = 'mongodb://127.0.0.1:27017/CollectorDream';
-    mongoose.connect(strMongoURI, {
+    const mongoURI = 'mongodb://127.0.0.1:27017/CollectorDream';
+    mongoose.connect(mongoURI, {
         useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 3000,
-        connectTimeoutMS: 3000
+        useUnifiedTopology: true
     }).catch(err => console.log('MongoDB connection error:', err));
     
     // === DATABASE SCHEMA ===
@@ -143,34 +110,34 @@ function startServer(fnCallback) {
     const Data = mongoose.model('Data', dataSchema, 'collection');
     
     // === API ROUTES ===
-    objExpressApp.get('/collection', async (req, res) => {
+    expressApp.get('/collection', async (req, res) => {
         try {
-            const arrAllData = await Data.find();
-            res.json(arrAllData);
+            const allData = await Data.find();
+            res.json(allData);
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
     });
     
-    objExpressApp.post('/collection', async (req, res) => {
+    expressApp.post('/collection', async (req, res) => {
         try {
-            const objNewData = Data(req.body);
-            const objSavedData = await objNewData.save();
-            res.status(201).json(objSavedData);
+            const newData = Data(req.body);
+            const savedData = await newData.save();
+            res.status(201).json(savedData);
         } catch(err){
             res.status(400).json({message: err.message});
         }
     });
     
-    objExpressApp.delete('/collection/:id', async (req, res) => {
+    expressApp.delete('/collection/:id', async (req, res) => {
         try {
-            const strId = req.params.id;
-            const objDocument = await Data.findById(strId);
-            if (!objDocument) {
+            const id = req.params.id;
+            const document = await Data.findById(id);
+            if (!document) {
                 return res.status(404).json({ message: "Document not found" });
             }
-            const objDeletedData = await Data.findByIdAndDelete(strId);
-            res.json({ message: "Document deleted successfully", deletedData: objDeletedData });
+            const deletedData = await Data.findByIdAndDelete(id);
+            res.json({ message: "Document deleted successfully", deletedData });
         } catch (error) {
             if (error.name === 'CastError') {
                 return res.status(400).json({ message: "Invalid ID format" });
@@ -179,29 +146,29 @@ function startServer(fnCallback) {
         }
     });
     
-    objExpressApp.get('/categories', (req, res) => {
+    expressApp.get('/categories', (req, res) => {
         try {
-            const strCategoriesPath = path.join(getUserDataDir(), 'categories.json');
-            let objCategories = {};
-            if (fs.existsSync(strCategoriesPath)) {
-                objCategories = JSON.parse(fs.readFileSync(strCategoriesPath, 'utf8'));
+            const categoriesPath = path.join(getUserDataDir(), 'categories.json');
+            let categories = {};
+            if (fs.existsSync(categoriesPath)) {
+                categories = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'));
             }
-            res.json(objCategories);
+            res.json(categories);
         } catch (error) {
             res.status(500).json({ message: error.message });
         }
     });
     
-    objExpressApp.post('/categories', (req, res) => {
+    expressApp.post('/categories', (req, res) => {
         try {
-            const strCategoriesPath = path.join(getUserDataDir(), 'categories.json');
-            let objCategories = {};
-            if (fs.existsSync(strCategoriesPath)) {
-                objCategories = JSON.parse(fs.readFileSync(strCategoriesPath, 'utf8'));
+            const categoriesPath = path.join(getUserDataDir(), 'categories.json');
+            let categories = {};
+            if (fs.existsSync(categoriesPath)) {
+                categories = JSON.parse(fs.readFileSync(categoriesPath, 'utf8'));
             }
-            const { key: strKey, category: objCategory } = req.body;
-            objCategories[strKey] = objCategory;
-            fs.writeFileSync(strCategoriesPath, JSON.stringify(objCategories, null, 4));
+            const { key, category } = req.body;
+            categories[key] = category;
+            fs.writeFileSync(categoriesPath, JSON.stringify(categories, null, 4));
             res.json({ message: 'Category saved successfully' });
         } catch (error) {
             res.status(500).json({ message: error.message });
@@ -209,43 +176,42 @@ function startServer(fnCallback) {
     });
     
     // Serve static files
-    objExpressApp.use(express.static(__dirname));
+    expressApp.use(express.static(__dirname));
     
-    objExpressApp.get('/', (req, res) => {
+    expressApp.get('/', (req, res) => {
         res.sendFile(path.join(__dirname, 'index.html'));
     });
     
-    objServer = objExpressApp.listen(intPort, () => {
-        console.log(`Server running on port ${intPort}`);
-        if (fnCallback) fnCallback();
+    server = expressApp.listen(port, () => {
+        console.log(`Server running on port ${port}`);
     });
 }
 
 // === IPC HANDLERS ===
 ipcMain.on('check-mongodb', async (event) => {
-    const objResult = await objInstaller.checkMongoDB();
-    event.reply('mongodb-status', objResult);
+    const result = await installer.checkMongoDB();
+    event.reply('mongodb-status', result);
 });
 
 ipcMain.on('install-mongodb', async (event) => {
-    const objResult = await objInstaller.installMongoDB((objProgress) => {
-        event.reply('install-progress', objProgress);
+    const result = await installer.installMongoDB((progress) => {
+        event.reply('install-progress', progress);
     });
-    event.reply('install-result', objResult);
+    event.reply('install-result', result);
 });
 
 ipcMain.on('skip-mongodb', (event) => {
     markConfigured();
-    if (objWizardWindow) {
-        objWizardWindow.close();
+    if (wizardWindow) {
+        wizardWindow.close();
     }
     createWindow();
 });
 
 ipcMain.on('continue-to-app', (event) => {
     markConfigured();
-    if (objWizardWindow) {
-        objWizardWindow.close();
+    if (wizardWindow) {
+        wizardWindow.close();
     }
     createWindow();
 });
@@ -262,8 +228,8 @@ app.whenReady().then(async () => {
 
 // Handle app quit when all windows closed
 app.on('window-all-closed', () => {
-    if (objServer) {
-        objServer.close();
+    if (server) {
+        server.close();
     }
     if (process.platform !== 'darwin') {
         app.quit();

@@ -7,16 +7,16 @@ const https = require('https');
 
 class MongoInstaller {
     constructor() {
-        this.strPlatform = os.platform();
-        this.strArch = os.arch();
+        this.platform = os.platform();
+        this.arch = os.arch();
     }
 
     // Check if MongoDB is installed
     checkMongoDB() {
         return new Promise((resolve) => {
-            exec('mongod --version', (error, strStdout) => {
-                if (!error && strStdout.includes('db version')) {
-                    resolve({ found: true, version: strStdout.split('\n')[0] });
+            exec('mongod --version', (error, stdout) => {
+                if (!error && stdout.includes('db version')) {
+                    resolve({ found: true, version: stdout.split('\n')[0] });
                 } else {
                     resolve({ found: false });
                 }
@@ -25,12 +25,12 @@ class MongoInstaller {
     }
 
     // Install MongoDB based on platform
-    async installMongoDB(fnProgressCallback) {
+    async installMongoDB(progressCallback) {
         try {
-            if (this.strPlatform === 'win32') {
-                return await this.installWindows(fnProgressCallback);
-            } else if (this.strPlatform === 'linux') {
-                return await this.installLinux(fnProgressCallback);
+            if (this.platform === 'win32') {
+                return await this.installWindows(progressCallback);
+            } else if (this.platform === 'linux') {
+                return await this.installLinux(progressCallback);
             } else {
                 throw new Error('Unsupported platform for automatic installation');
             }
@@ -40,28 +40,28 @@ class MongoInstaller {
     }
 
     // Windows installation using winget
-    installWindows(fnProgressCallback) {
+    installWindows(progressCallback) {
         return new Promise((resolve) => {
-            fnProgressCallback({ progress: 10, message: 'Starting Windows installation...' });
+            progressCallback({ progress: 10, message: 'Starting Windows installation...' });
             
             // Try winget first
-            const objWingetProcess = spawn('winget', ['install', 'MongoDB.Server', '--accept-package-agreements', '--accept-source-agreements'], {
+            const wingetProcess = spawn('winget', ['install', 'MongoDB.Server', '--accept-package-agreements', '--accept-source-agreements'], {
                 stdio: 'pipe'
             });
 
-            let strOutput = '';
-            objWingetProcess.stdout.on('data', (data) => {
-                strOutput += data.toString();
-                if (strOutput.includes('Installing')) {
-                    fnProgressCallback({ progress: 50, message: 'Installing MongoDB...' });
-                } else if (strOutput.includes('Successfully')) {
-                    fnProgressCallback({ progress: 90, message: 'Installation complete...' });
+            let output = '';
+            wingetProcess.stdout.on('data', (data) => {
+                output += data.toString();
+                if (output.includes('Installing')) {
+                    progressCallback({ progress: 50, message: 'Installing MongoDB...' });
+                } else if (output.includes('Successfully')) {
+                    progressCallback({ progress: 90, message: 'Installation complete...' });
                 }
             });
 
-            objWingetProcess.on('close', (intCode) => {
-                if (intCode === 0) {
-                    fnProgressCallback({ progress: 100, message: 'MongoDB installed successfully!' });
+            wingetProcess.on('close', (code) => {
+                if (code === 0) {
+                    progressCallback({ progress: 100, message: 'MongoDB installed successfully!' });
                     resolve({ success: true });
                 } else {
                     // Fallback to manual download instructions
@@ -72,7 +72,7 @@ class MongoInstaller {
                 }
             });
 
-            objWingetProcess.on('error', () => {
+            wingetProcess.on('error', () => {
                 resolve({ 
                     success: false, 
                     error: 'winget not available. Please install MongoDB manually from https://www.mongodb.com/try/download/community' 
@@ -82,19 +82,19 @@ class MongoInstaller {
     }
 
     // Linux installation using package managers
-    installLinux(fnProgressCallback) {
+    installLinux(progressCallback) {
         return new Promise((resolve) => {
-            fnProgressCallback({ progress: 10, message: 'Detecting Linux distribution...' });
+            progressCallback({ progress: 10, message: 'Detecting Linux distribution...' });
             
             // Check if we have apt (Ubuntu/Debian)
             exec('which apt-get', (error) => {
                 if (!error) {
-                    this.installUbuntu(fnProgressCallback, resolve);
+                    this.installUbuntu(progressCallback, resolve);
                 } else {
                     // Check for yum (CentOS/RHEL)
-                    exec('which yum', (objYumError) => {
-                        if (!objYumError) {
-                            this.installCentOS(fnProgressCallback, resolve);
+                    exec('which yum', (yumError) => {
+                        if (!yumError) {
+                            this.installCentOS(progressCallback, resolve);
                         } else {
                             resolve({ 
                                 success: false, 
@@ -108,84 +108,84 @@ class MongoInstaller {
     }
 
     // Ubuntu/Debian installation
-    installUbuntu(fnProgressCallback, fnResolve) {
-        fnProgressCallback({ progress: 20, message: 'Installing on Ubuntu/Debian...' });
+    installUbuntu(progressCallback, resolve) {
+        progressCallback({ progress: 20, message: 'Installing on Ubuntu/Debian...' });
         
-        const arrCommands = [
+        const commands = [
             'sudo apt-get update',
             'sudo apt-get install -y mongodb'
         ];
         
-        this.runCommands(arrCommands, fnProgressCallback, fnResolve);
+        this.runCommands(commands, progressCallback, resolve);
     }
 
     // CentOS/RHEL installation
-    installCentOS(fnProgressCallback, fnResolve) {
-        fnProgressCallback({ progress: 20, message: 'Installing on CentOS/RHEL...' });
+    installCentOS(progressCallback, resolve) {
+        progressCallback({ progress: 20, message: 'Installing on CentOS/RHEL...' });
         
-        const arrCommands = [
+        const commands = [
             'sudo yum install -y mongodb-server'
         ];
         
-        this.runCommands(arrCommands, fnProgressCallback, fnResolve);
+        this.runCommands(commands, progressCallback, resolve);
     }
 
     // Run installation commands sequentially
-    runCommands(arrCommands, fnProgressCallback, fnResolve) {
-        let intCurrentCommand = 0;
+    runCommands(commands, progressCallback, resolve) {
+        let currentCommand = 0;
         
-        const fnRunNext = () => {
-            if (intCurrentCommand >= arrCommands.length) {
-                fnProgressCallback({ progress: 90, message: 'Starting MongoDB service...' });
-                this.startMongoService(fnProgressCallback, fnResolve);
+        const runNext = () => {
+            if (currentCommand >= commands.length) {
+                progressCallback({ progress: 90, message: 'Starting MongoDB service...' });
+                this.startMongoService(progressCallback, resolve);
                 return;
             }
             
-            const strCmd = arrCommands[intCurrentCommand];
-            const intProgress = 30 + (intCurrentCommand / arrCommands.length) * 50;
-            fnProgressCallback({ progress: intProgress, message: `Running: ${strCmd}` });
+            const cmd = commands[currentCommand];
+            const progress = 30 + (currentCommand / commands.length) * 50;
+            progressCallback({ progress, message: `Running: ${cmd}` });
             
-            exec(strCmd, (error, strStdout, strStderr) => {
+            exec(cmd, (error, stdout, stderr) => {
                 if (error) {
-                    fnResolve({ 
+                    resolve({ 
                         success: false, 
-                        error: `Command failed: ${strCmd}\n${strStderr}` 
+                        error: `Command failed: ${cmd}\n${stderr}` 
                     });
                     return;
                 }
                 
-                intCurrentCommand++;
-                fnRunNext();
+                currentCommand++;
+                runNext();
             });
         };
         
-        fnRunNext();
+        runNext();
     }
 
     // Start MongoDB service
-    startMongoService(fnProgressCallback, fnResolve) {
-        const arrStartCommands = [
+    startMongoService(progressCallback, resolve) {
+        const startCommands = [
             'sudo systemctl start mongodb',
             'sudo systemctl enable mongodb'
         ];
         
-        exec(arrStartCommands.join(' && '), (error) => {
+        exec(startCommands.join(' && '), (error) => {
             if (error) {
                 // Try alternative service name
-                exec('sudo systemctl start mongod && sudo systemctl enable mongod', (objAltError) => {
-                    if (objAltError) {
-                        fnResolve({ 
+                exec('sudo systemctl start mongod && sudo systemctl enable mongod', (altError) => {
+                    if (altError) {
+                        resolve({ 
                             success: false, 
                             error: 'MongoDB installed but failed to start service' 
                         });
                     } else {
-                        fnProgressCallback({ progress: 100, message: 'MongoDB installed and started!' });
-                        fnResolve({ success: true });
+                        progressCallback({ progress: 100, message: 'MongoDB installed and started!' });
+                        resolve({ success: true });
                     }
                 });
             } else {
-                fnProgressCallback({ progress: 100, message: 'MongoDB installed and started!' });
-                fnResolve({ success: true });
+                progressCallback({ progress: 100, message: 'MongoDB installed and started!' });
+                resolve({ success: true });
             }
         });
     }
