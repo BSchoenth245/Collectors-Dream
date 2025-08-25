@@ -15,16 +15,10 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 const strMongoURI = 'mongodb://127.0.0.1:27017/CollectorDream';
 mongoose.connect(strMongoURI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 3000,
-    connectTimeoutMS: 3000,
-    bufferCommands: false
+    useUnifiedTopology: true
 })
 .then(() => console.log('MongoDB connected successfully'))
-.catch(err => {
-    console.log('MongoDB connection error:', err);
-    console.log('App will continue without database connection');
-});
+.catch(err => console.log('MongoDB connection error:', err));
 
 // === DATABASE SCHEMA ===
 const Schema = mongoose.Schema;

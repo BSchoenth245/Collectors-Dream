@@ -8,7 +8,6 @@ const MongoInstaller = require('./mongo-installer');
 
 let objMainWindow;
 let objWizardWindow;
-let objSplashWindow;
 let objServer;
 const objInstaller = new MongoInstaller();
 
@@ -32,32 +31,11 @@ function createWizard() {
     });
 }
 
-// Create splash screen
-function createSplash() {
-    objSplashWindow = new BrowserWindow({
-        width: 400,
-        height: 300,
-        frame: false,
-        alwaysOnTop: true,
-        transparent: true,
-        webPreferences: {
-            nodeIntegration: false,
-            contextIsolation: true
-        },
-        icon: path.join(__dirname, 'assets', 'colored-logo.png')
-    });
-    
-    objSplashWindow.loadFile('splash.html');
-}
-
 // Create main application window
 function createWindow() {
-    createSplash();
-    
     objMainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
-        show: false,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true
@@ -65,24 +43,16 @@ function createWindow() {
         icon: path.join(__dirname, 'assets', 'colored-logo.png')
     });
 
-    // Start the Express server and load app when ready
-    startServer(() => {
+    // Start the Express server
+    startServer();
+
+    // Load the app
+    setTimeout(() => {
         objMainWindow.loadURL('http://localhost:8000');
-        objMainWindow.once('ready-to-show', () => {
-            if (objSplashWindow) {
-                objSplashWindow.close();
-                objSplashWindow = null;
-            }
-            objMainWindow.show();
-        });
-    });
+    }, 2000);
 
     objMainWindow.on('closed', () => {
         objMainWindow = null;
-        if (objSplashWindow) {
-            objSplashWindow.close();
-            objSplashWindow = null;
-        }
         if (objServer) {
             objServer.close();
         }
@@ -114,7 +84,7 @@ function markConfigured() {
 
 // === EMBEDDED SERVER ===
 // Start Express server within Electron
-function startServer(fnCallback) {
+function startServer() {
     // Import and start the server directly
     const express = require('express');
     const mongoose = require('mongoose');
@@ -132,9 +102,7 @@ function startServer(fnCallback) {
     const strMongoURI = 'mongodb://127.0.0.1:27017/CollectorDream';
     mongoose.connect(strMongoURI, {
         useNewUrlParser: true,
-        useUnifiedTopology: true,
-        serverSelectionTimeoutMS: 3000,
-        connectTimeoutMS: 3000
+        useUnifiedTopology: true
     }).catch(err => console.log('MongoDB connection error:', err));
     
     // === DATABASE SCHEMA ===
@@ -217,7 +185,6 @@ function startServer(fnCallback) {
     
     objServer = objExpressApp.listen(intPort, () => {
         console.log(`Server running on port ${intPort}`);
-        if (fnCallback) fnCallback();
     });
 }
 
