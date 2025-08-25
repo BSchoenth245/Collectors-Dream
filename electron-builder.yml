@@ -36,7 +36,7 @@ linux:
   category: Utility
   artifactName: "${productName}-${version}.${ext}"
 
-compression: maximum
+compression: store
 nodeGypRebuild: false
 buildDependenciesFromSource: false
 npmRebuild: false
@@ -48,9 +48,3 @@ nsis:
   createStartMenuShortcut: true
   differentialPackage: false
   runAfterFinish: false
-  packElevateHelper: false
-  perMachine: false
-  warningsAsErrors: false
-
-electronDownload:
-  cache: .electron

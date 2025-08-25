@@ -12,9 +12,7 @@
     "build-win": "electron-builder --win --x64",
     "build-linux": "electron-builder --linux --x64",
     "build-win-fast": "node build-fast.js",
-    "release": "electron-builder --win --linux --publish=always",
-    "prebuild": "echo 'Preparing build...'",
-    "postbuild": "echo 'Build finished!'"
+    "release": "electron-builder --win --linux --publish=always"
   },
   "author": {
     "name": "Brock Schoenthlaer",
@@ -95,8 +93,6 @@
     "npmRebuild": false,
     "electronDownload": {
       "cache": ".electron"
-    },
-    "beforeBuild": "echo 'Starting build...'",
-    "afterSign": "echo 'Build complete'"
+    }
   }
 }
