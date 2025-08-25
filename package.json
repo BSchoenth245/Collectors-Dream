@@ -36,18 +36,23 @@
       "output": "dist"
     },
     "files": [
-      "*.js",
-      "*.html",
-      "*.json",
-      "assets/**/*",
+      "main.js",
+      "server.js",
+      "updater.js",
+      "mongo-installer.js",
+      "index.html",
+      "mongo-wizard.html",
+      "app.js",
+      "categories.json",
+      "assets/colored-logo.png",
       "node_modules/**/*",
+      "!node_modules/**/test/**/*",
+      "!node_modules/**/tests/**/*",
+      "!node_modules/**/*.md",
+      "!node_modules/**/LICENSE*",
+      "!node_modules/**/CHANGELOG*",
       "!data/**/*",
-      "!dist/**/*",
-      "!*.md",
-      "!main-*",
-      "!setup.js",
-      "!start-app.js",
-      "!RELEASE_NOTES*"
+      "!dist/**/*"
     ],
     "publish": {
       "provider": "github",
@@ -78,7 +83,11 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "differentialPackage": false,
-      "runAfterFinish": false
-    }
+      "runAfterFinish": false,
+      "packElevateHelper": false,
+      "perMachine": false
+    },
+    "nodeGypRebuild": false,
+    "buildDependenciesFromSource": false
   }
 }
