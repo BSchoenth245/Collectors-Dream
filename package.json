@@ -11,7 +11,9 @@
     "build": "electron-builder --win --linux",
     "build-win": "electron-builder --win",
     "build-linux": "electron-builder --linux",
-    "release": "electron-builder --win --linux --publish=always"
+    "build-linux-only": "electron-builder --linux --x64",
+    "release": "electron-builder --win --linux --publish=always",
+    "release-linux": "electron-builder --linux --publish=always"
   },
   "author": {
     "name": "Brock Schoenthlaer",
@@ -64,7 +66,6 @@
         "target": "nsis",
         "arch": ["x64"]
       },
-      "icon": "assets/colored-logo.png",
       "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "linux": {
@@ -88,6 +89,10 @@
       "perMachine": false
     },
     "nodeGypRebuild": false,
-    "buildDependenciesFromSource": false
+    "buildDependenciesFromSource": false,
+    "win": {
+      "target": "nsis",
+      "requestedExecutionLevel": "asInvoker"
+    }
   }
 }
