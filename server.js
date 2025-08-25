@@ -14,10 +14,16 @@ app.use(express.json());
 const strMongoURI = 'mongodb://127.0.0.1:27017/CollectorDream';
 mongoose.connect(strMongoURI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 3000,
+    connectTimeoutMS: 3000,
+    bufferCommands: false
 })
 .then(() => console.log('MongoDB connected successfully'))
-.catch(err => console.log('MongoDB connection error:', err));
+.catch(err => {
+    console.log('MongoDB connection error:', err);
+    console.log('App will continue without database connection');
+});
 
 // === DATABASE SCHEMA ===
 const Schema = mongoose.Schema;
