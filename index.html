@@ -84,13 +84,13 @@
 
             <!-- Categories Tab -->
             <div class="tab-pane fade" id="categories" role="tabpanel">
-                <div class="mb-3">
-                    <div class="d-flex gap-2 mb-3">
-                        <button class="btn btn-primary" onclick="showAddCategoryForm()">Create New Category</button>
-                        <button class="btn btn-secondary" onclick="showEditCategoryForm()">Edit Category</button>
-                        <button class="btn btn-danger" onclick="showDeleteCategoryForm()">Delete Category</button>
-                    </div>
+                <!-- New Category Button - positioned based on categories existence -->
+                <div id="newCategoryButtonContainer" class="new-category-button-container">
+                    <button id="newCategoryButton" class="btn btn-primary" onclick="showAddCategoryForm()">Create New Category</button>
                 </div>
+                
+                <!-- Categories Grid -->
+                <div id="categoriesGrid" class="categories-grid"></div>
 
                 <div id="addCategoryForm" style="display: none;" class="mb-3 p-3 border rounded">
                     <h5>Create New Category</h5>

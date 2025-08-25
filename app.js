@@ -8,7 +8,7 @@ function fetchAndDisplayData() {
         return;
     }
 
-    fetch('http://127.0.0.1:8000/collection', {
+    fetch('http://127.0.0.1:8000/api/collection', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -103,7 +103,7 @@ function refreshTable() {
 
 // Delete specific record by ID
 function deleteRecord(strId) {
-    fetch(`http://127.0.0.1:8000/collection/${strId}`, {
+    fetch(`http://127.0.0.1:8000/api/collection/${strId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
@@ -129,7 +129,7 @@ function deleteRecord(strId) {
 let objCategories = {};
 
 // Load categories from server on page load
-fetch('http://127.0.0.1:8000/categories')
+fetch('http://127.0.0.1:8000/api/categories')
 .then(response => response.json())
 .then(objData => {
     objCategories = objData;
@@ -172,6 +172,42 @@ function populateCategoryDropdowns() {
         elmOption4.textContent = objCategories[strKey].name;
         elmDeleteSelect.appendChild(elmOption4);
     });
+    
+    // Update categories display
+    renderCategoriesGrid();
+}
+
+// Render categories as cards
+function renderCategoriesGrid() {
+    const elmButtonContainer = document.getElementById('newCategoryButtonContainer');
+    const elmGrid = document.getElementById('categoriesGrid');
+    const arrCategoryKeys = Object.keys(objCategories);
+    
+    if (arrCategoryKeys.length === 0) {
+        // No categories - show large centered button
+        elmButtonContainer.className = 'new-category-button-container empty';
+        elmGrid.innerHTML = '';
+    } else {
+        // Has categories - show small button and cards
+        elmButtonContainer.className = 'new-category-button-container has-categories';
+        
+        // Create category cards
+        elmGrid.innerHTML = '';
+        arrCategoryKeys.forEach(strKey => {
+            const objCategory = objCategories[strKey];
+            const elmCard = document.createElement('div');
+            elmCard.className = 'category-card';
+            elmCard.innerHTML = `
+                <h5>${objCategory.name}</h5>
+                <p class="text-muted">${objCategory.fields.length} fields</p>
+                <div class="category-card-actions">
+                    <button class="btn btn-sm btn-secondary" onclick="editCategory('${strKey}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="confirmDeleteCategory('${strKey}')">Delete</button>
+                </div>
+            `;
+            elmGrid.appendChild(elmCard);
+        });
+    }
 }
 
 // Load form fields based on selected category
@@ -219,7 +255,7 @@ function submitCategoryData() {
         objData[elmInput.name] = value;
     });
     
-    fetch('http://127.0.0.1:8000/collection', {
+    fetch('http://127.0.0.1:8000/api/collection', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -306,7 +342,7 @@ function deleteCategory() {
         confirmButtonText: 'Yes, delete it!'
     }).then((objResult) => {
         if (objResult.isConfirmed) {
-            fetch(`http://127.0.0.1:8000/categories/${strCategoryKey}`, {
+            fetch(`http://127.0.0.1:8000/api/categories/${strCategoryKey}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -317,6 +353,47 @@ function deleteCategory() {
                 delete objCategories[strCategoryKey];
                 populateCategoryDropdowns();
                 cancelDeleteCategory();
+                Swal.fire('Deleted!', 'Category has been deleted.', 'success');
+            })
+            .catch(error => {
+                Swal.fire('Error!', 'Error deleting category: ' + error.message, 'error');
+            });
+        }
+    });
+}
+
+// Edit category from card
+function editCategory(strCategoryKey) {
+    const elmEditSelect = document.getElementById('editCategorySelect');
+    elmEditSelect.value = strCategoryKey;
+    loadEditCategoryForm();
+    showEditCategoryForm();
+}
+
+// Confirm delete category from card
+function confirmDeleteCategory(strCategoryKey) {
+    const strCategoryName = objCategories[strCategoryKey].name;
+    
+    Swal.fire({
+        title: 'Are you sure?',
+        text: `Delete category "${strCategoryName}"? This cannot be undone!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((objResult) => {
+        if (objResult.isConfirmed) {
+            fetch(`http://127.0.0.1:8000/api/categories/${strCategoryKey}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(objResult => {
+                delete objCategories[strCategoryKey];
+                populateCategoryDropdowns();
                 Swal.fire('Deleted!', 'Category has been deleted.', 'success');
             })
             .catch(error => {
@@ -431,7 +508,7 @@ function saveEditCategory() {
     };
     
     // Save to server
-    fetch('http://127.0.0.1:8000/categories', {
+    fetch('http://127.0.0.1:8000/api/categories', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -485,7 +562,7 @@ function saveNewCategory() {
     };
     
     // Save to server
-    fetch('http://127.0.0.1:8000/categories', {
+    fetch('http://127.0.0.1:8000/api/categories', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -518,7 +595,7 @@ function filterByCategory() {
     }
     
     // Fetch and filter data by category
-    fetch('http://127.0.0.1:8000/collection')
+    fetch('http://127.0.0.1:8000/api/collection')
     .then(response => response.json())
     .then(arrData => {
         const objCategory = objCategories[strSelectedCategory];

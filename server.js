@@ -2,6 +2,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const intPort = 8000;
@@ -25,12 +27,11 @@ const Schema = mongoose.Schema;
 const dataSchema = new Schema({}, { strict: false });
 const Data = mongoose.model('Data', dataSchema, 'collection');
 
+// === API ROUTES (MUST BE FIRST) ===
 
-// === COLLECTION ROUTES ===
-// Get all collection items
-app.get('/collection', async (req, res) => {
+// Collection routes
+app.get('/api/collection', async (req, res) => {
     try {
-        // Query the collection
         const arrAllData = await Data.find();
         res.json(arrAllData);
     } catch (error) {
@@ -38,49 +39,35 @@ app.get('/collection', async (req, res) => {
     }
 });
 
-// Add new collection item
-app.post('/collection', async (req, res) => {
+app.post('/api/collection', async (req, res) => {
     try {
-        const objNewData = Data(req.body)
-
-        const objSavedData = await objNewData.save()
-
-        res.status(201).json(objSavedData)
+        const objNewData = Data(req.body);
+        const objSavedData = await objNewData.save();
+        res.status(201).json(objSavedData);
     } catch(err){
-        res.status(400).json({message: err.message})
-    
+        res.status(400).json({message: err.message});
     }
-})
+});
 
-// Delete collection item by ID
-app.delete('/collection/:id', async (req, res) => {
+app.delete('/api/collection/:id', async (req, res) => {
     try {
         const strId = req.params.id;
-        
-        // Check if the document exists first
         const objDocument = await Data.findById(strId);
         if (!objDocument) {
             return res.status(404).json({ message: "Document not found" });
         }
-
-        // Delete the document
         const objDeletedData = await Data.findByIdAndDelete(strId);
         res.json({ message: "Document deleted successfully", deletedData: objDeletedData });
     } catch (error) {
-        // Handle invalid ID format error
         if (error.name === 'CastError') {
             return res.status(400).json({ message: "Invalid ID format" });
         }
         res.status(500).json({ message: error.message });
     }
-})
+});
 
-// === CATEGORY ROUTES ===
-const fs = require('fs');
-const path = require('path');
-
-// Get all categories from JSON file
-app.get('/categories', (req, res) => {
+// Category routes
+app.get('/api/categories', (req, res) => {
     try {
         const strCategoriesPath = path.join(__dirname, 'categories.json');
         const objCategories = JSON.parse(fs.readFileSync(strCategoriesPath, 'utf8'));
@@ -90,15 +77,12 @@ app.get('/categories', (req, res) => {
     }
 });
 
-// Save new category to JSON file
-app.post('/categories', (req, res) => {
+app.post('/api/categories', (req, res) => {
     try {
         const strCategoriesPath = path.join(__dirname, 'categories.json');
         const objCategories = JSON.parse(fs.readFileSync(strCategoriesPath, 'utf8'));
-        
         const { key: strKey, category: objCategory } = req.body;
         objCategories[strKey] = objCategory;
-        
         fs.writeFileSync(strCategoriesPath, JSON.stringify(objCategories, null, 4));
         res.json({ message: 'Category saved successfully' });
     } catch (error) {
@@ -106,17 +90,14 @@ app.post('/categories', (req, res) => {
     }
 });
 
-// Delete category from JSON file
-app.delete('/categories/:key', (req, res) => {
+app.delete('/api/categories/:key', (req, res) => {
     try {
         const strCategoriesPath = path.join(__dirname, 'categories.json');
         const objCategories = JSON.parse(fs.readFileSync(strCategoriesPath, 'utf8'));
-        const { key: strKey } = req.params;
-        
+        const strKey = req.params.key;
         if (!objCategories[strKey]) {
             return res.status(404).json({ message: 'Category not found' });
         }
-        
         delete objCategories[strKey];
         fs.writeFileSync(strCategoriesPath, JSON.stringify(objCategories, null, 4));
         res.json({ message: 'Category deleted successfully' });
@@ -125,13 +106,12 @@ app.delete('/categories/:key', (req, res) => {
     }
 });
 
-// === STATIC FILES & SERVER START ===
-// Serve static files
+// === STATIC FILES (AFTER API ROUTES) ===
 app.use(express.static(__dirname));
 
-// Serve main HTML page
+// === ROOT ROUTE ===
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Start server
