@@ -727,3 +727,97 @@ function displayFilteredData(arrData) {
     });
     elmTable.appendChild(elmTbody);
 }
+
+// === SETTINGS MANAGEMENT ===
+let objUserSettings = { darkMode: false };
+
+// Load settings from server
+function loadSettings() {
+    fetch('http://127.0.0.1:8000/api/settings')
+    .then(response => response.json())
+    .then(objSettings => {
+        objUserSettings = objSettings;
+        applySettings();
+    })
+    .catch(error => {
+        console.error('Error loading settings:', error);
+        // Fallback to localStorage for web version
+        const strDarkMode = localStorage.getItem('darkMode');
+        if (strDarkMode === 'enabled') {
+            objUserSettings.darkMode = true;
+        }
+        applySettings();
+    });
+}
+
+// Apply settings to UI
+function applySettings() {
+    const elmToggle = document.getElementById('darkModeToggle');
+    
+    if (objUserSettings.darkMode) {
+        document.body.classList.add('dark-mode');
+        if (elmToggle) elmToggle.checked = true;
+    } else {
+        document.body.classList.remove('dark-mode');
+        if (elmToggle) elmToggle.checked = false;
+    }
+}
+
+// Save settings to server
+function saveSettings() {
+    fetch('http://127.0.0.1:8000/api/settings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(objUserSettings)
+    })
+    .catch(error => {
+        console.error('Error saving settings:', error);
+        // Fallback to localStorage for web version
+        localStorage.setItem('darkMode', objUserSettings.darkMode ? 'enabled' : 'disabled');
+    });
+}
+
+// Toggle dark mode
+function toggleDarkMode() {
+    const elmToggle = document.getElementById('darkModeToggle');
+    objUserSettings.darkMode = elmToggle.checked;
+    
+    applySettings();
+    saveSettings();
+}
+
+// Export data
+function exportData() {
+    fetch('http://127.0.0.1:8000/api/collection')
+    .then(response => response.json())
+    .then(arrData => {
+        const objExport = {
+            categories: objCategories,
+            items: arrData,
+            settings: objUserSettings,
+            exportDate: new Date().toISOString()
+        };
+        
+        const strData = JSON.stringify(objExport, null, 2);
+        const elmBlob = new Blob([strData], { type: 'application/json' });
+        const strUrl = URL.createObjectURL(elmBlob);
+        
+        const elmLink = document.createElement('a');
+        elmLink.href = strUrl;
+        elmLink.download = `collectors-dream-export-${new Date().toISOString().split('T')[0]}.json`;
+        elmLink.click();
+        
+        URL.revokeObjectURL(strUrl);
+        Swal.fire('Success!', 'Data exported successfully!', 'success');
+    })
+    .catch(error => {
+        Swal.fire('Error!', 'Error exporting data: ' + error.message, 'error');
+    });
+}
+
+// Load settings when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    loadSettings();
+});

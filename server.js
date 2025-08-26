@@ -109,6 +109,31 @@ app.delete('/api/categories/:key', (req, res) => {
 // === STATIC FILES (AFTER API ROUTES) ===
 app.use(express.static(__dirname));
 
+// Settings routes
+app.get('/api/settings', (req, res) => {
+    try {
+        const strSettingsPath = path.join(__dirname, 'settings.json');
+        let objSettings = { darkMode: false };
+        if (fs.existsSync(strSettingsPath)) {
+            objSettings = JSON.parse(fs.readFileSync(strSettingsPath, 'utf8'));
+        }
+        res.json(objSettings);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+app.post('/api/settings', (req, res) => {
+    try {
+        const strSettingsPath = path.join(__dirname, 'settings.json');
+        const objSettings = req.body;
+        fs.writeFileSync(strSettingsPath, JSON.stringify(objSettings, null, 4));
+        res.json({ message: 'Settings saved successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // === ROOT ROUTE ===
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));

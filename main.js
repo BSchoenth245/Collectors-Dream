@@ -195,6 +195,31 @@ function startServer() {
         }
     });
     
+    // Settings routes
+    objExpressApp.get('/api/settings', (req, res) => {
+        try {
+            const strSettingsPath = path.join(getUserDataDir(), 'settings.json');
+            let objSettings = { darkMode: false };
+            if (fs.existsSync(strSettingsPath)) {
+                objSettings = JSON.parse(fs.readFileSync(strSettingsPath, 'utf8'));
+            }
+            res.json(objSettings);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    });
+    
+    objExpressApp.post('/api/settings', (req, res) => {
+        try {
+            const strSettingsPath = path.join(getUserDataDir(), 'settings.json');
+            const objSettings = req.body;
+            fs.writeFileSync(strSettingsPath, JSON.stringify(objSettings, null, 4));
+            res.json({ message: 'Settings saved successfully' });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    });
+    
     // Serve static files
     objExpressApp.use(express.static(__dirname));
     

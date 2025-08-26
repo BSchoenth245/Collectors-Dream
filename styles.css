@@ -34,6 +34,7 @@ body {
     padding: 20px;
     background: var(--background-gradient);
     min-height: 100vh;
+    color: var(--text-dark);
 }
 
 .container {
@@ -80,7 +81,138 @@ button {
     border-radius: 4px;
     cursor: pointer;
     font-size: 14px;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    color: var(--background-white);
+}
+
+/* Form Elements */
+input, select, textarea {
+    background: var(--background-white);
+    color: var(--text-dark);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    padding: 8px 12px;
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+}
+
+label {
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+/* Tables */
+table {
+    background: var(--background-white);
+    color: var(--text-dark);
+}
+
+th {
+    background: var(--background-light);
+    color: var(--text-dark);
+    border-color: var(--border-light);
+}
+
+td {
+    border-color: var(--border-light);
+    color: var(--text-dark);
+}
+
+/* Bootstrap Tab Overrides */
+.nav-tabs {
+    border-bottom-color: var(--border-light);
+}
+
+.nav-tabs .nav-link {
+    color: var(--text-muted);
+    border-color: transparent;
+    background: transparent;
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--primary-color);
+    border-color: var(--border-light);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--primary-color);
+    background: var(--background-white);
+    border-color: var(--border-light) var(--border-light) var(--background-white);
+}
+
+/* Form Controls */
+.form-control, .form-select {
+    background: var(--background-white);
+    color: var(--text-dark);
+    border-color: var(--border-light);
+}
+
+.form-control:focus, .form-select:focus {
+    background: var(--background-white);
+    color: var(--text-dark);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(124, 58, 237, 0.25);
+}
+
+.form-label {
+    color: var(--text-dark);
+}
+
+/* Additional Elements */
+.btn {
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+
+.btn-secondary {
+    background: var(--secondary-gradient);
+    color: white;
+    box-shadow: 0 2px 8px rgba(100, 116, 139, 0.3);
+}
+
+.btn-success {
+    background: var(--accent-gradient);
+    color: white;
+    box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Checkbox and Radio Styling */
+input[type="checkbox"], input[type="radio"] {
+    accent-color: var(--primary-color);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background-light);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }
 
 .primary-btn {
@@ -221,4 +353,130 @@ button {
     flex: 1;
     padding: 8px 12px;
     font-size: 12px;
+}
+
+/* Options Tab Styles */
+.settings-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: var(--card-gradient);
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+}
+
+.settings-section h5 {
+    color: var(--text-dark);
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.setting-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    flex: 1;
+}
+
+.setting-text {
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.setting-description {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+/* Dark Mode Styles */
+body.dark-mode {
+    --primary-color: #a855f7;
+    --primary-hover: #9333ea;
+    --secondary-color: #94a3b8;
+    --secondary-hover: #64748b;
+    --accent-color: #0ea5e9;
+    --accent-hover: #0284c7;
+    
+    --primary-gradient: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+    --secondary-gradient: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+    --accent-gradient: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+    --background-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    --card-gradient: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    
+    --background-light: #0f172a;
+    --background-white: #1e293b;
+    --border-light: #334155;
+    --text-dark: #f1f5f9;
+    --text-muted: #94a3b8;
+    
+    --success-color: #22c55e;
+    --warning-color: #fbbf24;
+    --error-color: #f87171;
+}
+
+/* Dark Mode Additional Overrides */
+body.dark-mode .table {
+    --bs-table-bg: var(--background-white);
+    --bs-table-color: var(--text-dark);
+}
+
+body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .dropdown-menu {
+    background-color: var(--background-white);
+    border-color: var(--border-light);
+}
+
+body.dark-mode .dropdown-item {
+    color: var(--text-dark);
+}
+
+body.dark-mode .dropdown-item:hover {
+    background-color: var(--background-light);
+    color: var(--text-dark);
+}
+
+body.dark-mode .modal-content {
+    background-color: var(--background-white);
+    color: var(--text-dark);
+}
+
+body.dark-mode .modal-header {
+    border-bottom-color: var(--border-light);
+}
+
+body.dark-mode .modal-footer {
+    border-top-color: var(--border-light);
+}
+
+body.dark-mode .alert {
+    background-color: var(--background-light);
+    border-color: var(--border-light);
+    color: var(--text-dark);
+}
+
+body.dark-mode .text-muted {
+    color: var(--text-muted) !important;
+}
+
+body.dark-mode h1, 
+body.dark-mode h2, 
+body.dark-mode h3, 
+body.dark-mode h4, 
+body.dark-mode h5, 
+body.dark-mode h6 {
+    color: var(--text-dark);
+}
+
+body.dark-mode p {
+    color: var(--text-dark);
 }
