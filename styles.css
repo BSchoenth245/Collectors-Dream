@@ -32,12 +32,11 @@ body {
     max-width: 1200px;
     margin: 20px auto;
     padding: 20px;
-    background: var(--background-gradient);
     min-height: 100vh;
 }
 
 .container {
-    background: var(--card-gradient);
+    background: var(--background-gradient);
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
