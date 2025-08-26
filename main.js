@@ -111,7 +111,7 @@ function startServer() {
     const Data = mongoose.model('Data', dataSchema, 'collection');
     
     // === API ROUTES ===
-    objExpressApp.get('/collection', async (req, res) => {
+    objExpressApp.get('/api/collection', async (req, res) => {
         try {
             const arrAllData = await Data.find();
             res.json(arrAllData);
@@ -120,7 +120,7 @@ function startServer() {
         }
     });
     
-    objExpressApp.post('/collection', async (req, res) => {
+    objExpressApp.post('/api/collection', async (req, res) => {
         try {
             const objNewData = Data(req.body);
             const objSavedData = await objNewData.save();
@@ -130,7 +130,7 @@ function startServer() {
         }
     });
     
-    objExpressApp.delete('/collection/:id', async (req, res) => {
+    objExpressApp.delete('/api/collection/:id', async (req, res) => {
         try {
             const strId = req.params.id;
             const objDocument = await Data.findById(strId);
@@ -147,7 +147,7 @@ function startServer() {
         }
     });
     
-    objExpressApp.get('/categories', (req, res) => {
+    objExpressApp.get('/api/categories', (req, res) => {
         try {
             const strCategoriesPath = path.join(getUserDataDir(), 'categories.json');
             let objCategories = {};
@@ -160,7 +160,7 @@ function startServer() {
         }
     });
     
-    objExpressApp.post('/categories', (req, res) => {
+    objExpressApp.post('/api/categories', (req, res) => {
         try {
             const strCategoriesPath = path.join(getUserDataDir(), 'categories.json');
             let objCategories = {};
@@ -171,6 +171,25 @@ function startServer() {
             objCategories[strKey] = objCategory;
             fs.writeFileSync(strCategoriesPath, JSON.stringify(objCategories, null, 4));
             res.json({ message: 'Category saved successfully' });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    });
+    
+    objExpressApp.delete('/api/categories/:key', (req, res) => {
+        try {
+            const strCategoriesPath = path.join(getUserDataDir(), 'categories.json');
+            let objCategories = {};
+            if (fs.existsSync(strCategoriesPath)) {
+                objCategories = JSON.parse(fs.readFileSync(strCategoriesPath, 'utf8'));
+            }
+            const strKey = req.params.key;
+            if (!objCategories[strKey]) {
+                return res.status(404).json({ message: 'Category not found' });
+            }
+            delete objCategories[strKey];
+            fs.writeFileSync(strCategoriesPath, JSON.stringify(objCategories, null, 4));
+            res.json({ message: 'Category deleted successfully' });
         } catch (error) {
             res.status(500).json({ message: error.message });
         }

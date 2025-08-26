@@ -43,6 +43,7 @@
       "index.html",
       "mongo-wizard.html",
       "app.js",
+      "styles.css",
       "categories.json",
       "assets/colored-logo.png",
       "node_modules/**/*",
