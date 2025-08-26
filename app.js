@@ -375,31 +375,95 @@ function confirmDeleteCategory(strCategoryKey) {
     const strCategoryName = objCategories[strCategoryKey].name;
     
     Swal.fire({
-        title: 'Are you sure?',
-        text: `Delete category "${strCategoryName}"? This cannot be undone!`,
+        title: 'Delete Category?',
+        text: `Delete category "${strCategoryName}"?`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!'
+        confirmButtonColor: '#7c3aed',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Yes, delete category',
+        cancelButtonText: 'Cancel'
     }).then((objResult) => {
         if (objResult.isConfirmed) {
-            fetch(`http://127.0.0.1:8000/api/categories/${strCategoryKey}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
+            // Ask about associated items
+            Swal.fire({
+                title: 'Delete Associated Items?',
+                text: 'Do you also want to delete all items that belong to this category?',
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonColor: '#ef4444',
+                denyButtonColor: '#7c3aed',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Delete items too',
+                denyButtonText: 'Keep items',
+                cancelButtonText: 'Cancel'
+            }).then((itemResult) => {
+                if (itemResult.isConfirmed || itemResult.isDenied) {
+                    const boolDeleteItems = itemResult.isConfirmed;
+                    deleteCategoryAndItems(strCategoryKey, boolDeleteItems);
                 }
-            })
-            .then(response => response.json())
-            .then(objResult => {
-                delete objCategories[strCategoryKey];
-                populateCategoryDropdowns();
-                Swal.fire('Deleted!', 'Category has been deleted.', 'success');
-            })
-            .catch(error => {
-                Swal.fire('Error!', 'Error deleting category: ' + error.message, 'error');
             });
         }
+    });
+}
+
+// Delete category and optionally its items
+function deleteCategoryAndItems(strCategoryKey, boolDeleteItems) {
+    const strCategoryName = objCategories[strCategoryKey].name;
+    
+    // Delete category
+    fetch(`http://127.0.0.1:8000/api/categories/${strCategoryKey}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(objResult => {
+        delete objCategories[strCategoryKey];
+        
+        if (boolDeleteItems) {
+            // Delete associated items
+            const objCategory = objCategories[strCategoryKey] || { fields: [] };
+            const arrCategoryFields = objCategory.fields ? objCategory.fields.map(objF => objF.name) : [];
+            
+            fetch('http://127.0.0.1:8000/api/collection')
+            .then(response => response.json())
+            .then(arrData => {
+                const arrItemsToDelete = arrData.filter(objItem => {
+                    const arrMatchingFields = arrCategoryFields.filter(strField => objItem.hasOwnProperty(strField));
+                    return arrMatchingFields.length >= Math.ceil(arrCategoryFields.length * 0.6);
+                });
+                
+                const arrDeletePromises = arrItemsToDelete.map(objItem => 
+                    fetch(`http://127.0.0.1:8000/api/collection/${objItem._id}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' }
+                    })
+                );
+                
+                Promise.all(arrDeletePromises)
+                .then(() => {
+                    populateCategoryDropdowns();
+                    refreshTable();
+                    Swal.fire('Deleted!', `Category "${strCategoryName}" and ${arrItemsToDelete.length} associated items have been deleted.`, 'success');
+                })
+                .catch(error => {
+                    Swal.fire('Warning!', 'Category deleted but some items could not be deleted: ' + error.message, 'warning');
+                });
+            })
+            .catch(error => {
+                populateCategoryDropdowns();
+                Swal.fire('Warning!', 'Category deleted but could not check for associated items: ' + error.message, 'warning');
+            });
+        } else {
+            populateCategoryDropdowns();
+            Swal.fire('Deleted!', `Category "${strCategoryName}" has been deleted. Associated items were kept.`, 'success');
+        }
+    })
+    .catch(error => {
+        Swal.fire('Error!', 'Error deleting category: ' + error.message, 'error');
     });
 }
 
