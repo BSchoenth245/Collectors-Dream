@@ -1,13 +1,8 @@
 // === DATA DISPLAY FUNCTIONS ===
-// Fetch and display all collection data in table
-function fetchAndDisplayData() {
-    // First check if table exists
-    const elmTable = document.getElementById('dataTable');
-    if (!elmTable) {
-        console.error('Table element not found');
-        return;
-    }
+let objDataTable = null;
 
+// Fetch and display all collection data in DataTable
+function fetchAndDisplayData() {
     fetch('http://127.0.0.1:8000/api/collection', {
         method: 'GET',
         headers: {
@@ -21,78 +16,132 @@ function fetchAndDisplayData() {
         return response.json();
     })
     .then(arrData => {
-        // Clear existing table
-        elmTable.innerHTML = '';
-
-        // Get all unique keys from data
-        const setAllKeys = new Set();
-        arrData.forEach(objItem => {
-            Object.keys(objItem).forEach(strKey => {
-                if (strKey !== '_id' && strKey !== '__v') {
-                    setAllKeys.add(strKey);
-                }
-            });
-        });
-        const arrHeaders = [...setAllKeys, 'Actions'];
-
-        // Create table header
-        const elmThead = document.createElement('thead');
-        const elmHeaderRow = document.createElement('tr');
-        arrHeaders.forEach(strHeaderText => {
-            const elmTh = document.createElement('th');
-            elmTh.textContent = strHeaderText.charAt(0).toUpperCase() + strHeaderText.slice(1);
-            elmHeaderRow.appendChild(elmTh);
-        });
-        elmThead.appendChild(elmHeaderRow);
-        elmTable.appendChild(elmThead);
-
-        // Create table body
-        const elmTbody = document.createElement('tbody');
-        
-        // Populate table with data
-        arrData.forEach(objItem => {
-            const elmRow = document.createElement('tr');
-            arrHeaders.forEach(strHeader => {
-                const elmCell = document.createElement('td');
-                if (strHeader === 'Actions') {
-                    elmCell.innerHTML = `<button onclick="deleteRecord('${objItem._id}')">Delete</button>`;
-                } else {
-                    elmCell.textContent = objItem[strHeader] || 'N/A';
-                }
-                elmRow.appendChild(elmCell);
-            });
-            elmTbody.appendChild(elmRow);
-        });
-        
-        elmTable.appendChild(elmTbody);
+        initializeDataTable(arrData);
     })
     .catch(error => {
         console.error('Error fetching data:', error);
-        // Create a more user-friendly error message
-        const elmErrorMessage = document.createElement('div');
-        elmErrorMessage.className = 'error-message';
-        elmErrorMessage.textContent = `Unable to fetch data: ${error.message}`;
-        // If table exists, insert error message before it
-        if (elmTable) {
-            elmTable.parentNode.insertBefore(elmErrorMessage, elmTable);
-        }
     });
 }
 
-// === DOM INITIALIZATION ===
-// Ensure DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Check if table exists
-    const elmTable = document.getElementById('dataTable');
-    if (!elmTable) {
-        console.error('Table element not found. Creating table element...');
-        const elmTableContainer = document.createElement('div');
-        elmTableContainer.className = 'table-container';
-        const elmNewTable = document.createElement('table');
-        elmNewTable.id = 'dataTable';
-        elmTableContainer.appendChild(elmNewTable);
-        document.body.appendChild(elmTableContainer);
+// Initialize DataTable with data
+function initializeDataTable(arrData) {
+    // Wait for jQuery and DataTables to be available
+    if (typeof $ === 'undefined' || typeof $.fn.DataTable === 'undefined') {
+        setTimeout(() => initializeDataTable(arrData), 100);
+        return;
     }
+    
+    // Destroy existing DataTable if it exists
+    if (objDataTable) {
+        objDataTable.destroy();
+        $('#dataTable').empty();
+    }
+    
+    // If no data, show empty table
+    if (!arrData || arrData.length === 0) {
+        $('#dataTable').html('<thead><tr><th>No Data</th></tr></thead><tbody><tr><td>No records found</td></tr></tbody>');
+        return;
+    }
+    
+    // Get all unique keys from data
+    const setAllKeys = new Set();
+    arrData.forEach(objItem => {
+        Object.keys(objItem).forEach(strKey => {
+            if (strKey !== '_id' && strKey !== '__v') {
+                setAllKeys.add(strKey);
+            }
+        });
+    });
+    const arrHeaders = [...setAllKeys];
+    
+    // Prepare columns configuration
+    const arrColumns = arrHeaders.map(strHeader => ({
+        title: strHeader.charAt(0).toUpperCase() + strHeader.slice(1),
+        data: strHeader,
+        defaultContent: 'N/A'
+    }));
+    
+    // Add Actions column
+    arrColumns.push({
+        title: 'Actions',
+        data: null,
+        orderable: false,
+        render: function(data, type, row) {
+            return `<button class="btn btn-sm btn-danger" onclick="deleteRecord('${row._id}')">Delete</button>`;
+        }
+    });
+    
+    try {
+        // Initialize DataTable
+        objDataTable = $('#dataTable').DataTable({
+            data: arrData,
+            columns: arrColumns,
+            responsive: true,
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            order: [[0, 'asc']],
+            language: {
+                emptyTable: "No data available",
+                zeroRecords: "No matching records found"
+            },
+            destroy: true
+        });
+    } catch (error) {
+        console.error('Error initializing DataTable:', error);
+        // Fallback to basic table
+        createBasicTable(arrData, arrHeaders);
+    }
+}
+
+// Fallback function to create basic table if DataTables fails
+function createBasicTable(arrData, arrHeaders) {
+    const elmTable = document.getElementById('dataTable');
+    elmTable.innerHTML = '';
+    
+    // Create header
+    const elmThead = document.createElement('thead');
+    const elmHeaderRow = document.createElement('tr');
+    [...arrHeaders, 'Actions'].forEach(strHeader => {
+        const elmTh = document.createElement('th');
+        elmTh.textContent = strHeader.charAt(0).toUpperCase() + strHeader.slice(1);
+        elmHeaderRow.appendChild(elmTh);
+    });
+    elmThead.appendChild(elmHeaderRow);
+    elmTable.appendChild(elmThead);
+    
+    // Create body
+    const elmTbody = document.createElement('tbody');
+    arrData.forEach(objItem => {
+        const elmRow = document.createElement('tr');
+        arrHeaders.forEach(strHeader => {
+            const elmCell = document.createElement('td');
+            elmCell.textContent = objItem[strHeader] || 'N/A';
+            elmRow.appendChild(elmCell);
+        });
+        // Actions cell
+        const elmActionsCell = document.createElement('td');
+        elmActionsCell.innerHTML = `<button class="btn btn-sm btn-danger" onclick="deleteRecord('${objItem._id}')">Delete</button>`;
+        elmRow.appendChild(elmActionsCell);
+        elmTbody.appendChild(elmRow);
+    });
+    elmTable.appendChild(elmTbody);
+}
+
+// === DOM INITIALIZATION ===
+// Ensure DOM is loaded and jQuery is available
+$(document).ready(function() {
+    // Initialize DataTable when page loads
+    fetchAndDisplayData();
+});
+
+// Fallback for non-jQuery environments
+document.addEventListener('DOMContentLoaded', () => {
+    // Wait a bit for scripts to load, then initialize
+    setTimeout(() => {
+        if (typeof fetchAndDisplayData === 'function') {
+            fetchAndDisplayData();
+        }
+    }, 500);
 });
 
 // === TABLE MANAGEMENT ===
@@ -243,9 +292,12 @@ function loadCategoryForm() {
 
 // Submit new item data to database
 function submitCategoryData() {
+    const elmCategorySelect = document.getElementById('categorySelect');
     const elmFormFields = document.getElementById('formFields');
     const elmInputs = elmFormFields.querySelectorAll('input');
-    const objData = {};
+    const objData = {
+        category: elmCategorySelect.value // Add category identifier
+    };
     
     elmInputs.forEach(elmInput => {
         let value = elmInput.value;
@@ -652,9 +704,8 @@ function filterByCategory() {
     const strSelectedCategory = elmCategorySelect.value;
     
     if (!strSelectedCategory) {
-        // Clear table if no category selected
-        const elmTable = document.getElementById('dataTable');
-        elmTable.innerHTML = '';
+        // Show all data if no category selected
+        fetchAndDisplayData();
         return;
     }
     
@@ -662,13 +713,9 @@ function filterByCategory() {
     fetch('http://127.0.0.1:8000/api/collection')
     .then(response => response.json())
     .then(arrData => {
-        const objCategory = objCategories[strSelectedCategory];
-        const arrCategoryFields = objCategory.fields.map(objF => objF.name);
-        
-        // Filter data to only show items that have MOST fields from this category
+        // Filter data by exact category match
         const arrFilteredData = arrData.filter(objItem => {
-            const arrMatchingFields = arrCategoryFields.filter(strField => objItem.hasOwnProperty(strField));
-            return arrMatchingFields.length >= Math.ceil(arrCategoryFields.length * 0.6);
+            return objItem.category === strSelectedCategory;
         });
         
         displayFilteredData(arrFilteredData);
@@ -678,54 +725,9 @@ function filterByCategory() {
     });
 }
 
-// Display filtered data in table
+// Display filtered data in DataTable
 function displayFilteredData(arrData) {
-    const elmTable = document.getElementById('dataTable');
-    elmTable.innerHTML = '';
-    
-    if (arrData.length === 0) {
-        elmTable.innerHTML = '<p>No data found for this category.</p>';
-        return;
-    }
-    
-    // Get all unique keys from filtered data
-    const setAllKeys = new Set();
-    arrData.forEach(objItem => {
-        Object.keys(objItem).forEach(strKey => {
-            if (strKey !== '_id' && strKey !== '__v') {
-                setAllKeys.add(strKey);
-            }
-        });
-    });
-    const arrHeaders = [...setAllKeys, 'Actions'];
-    
-    // Create table header
-    const elmThead = document.createElement('thead');
-    const elmHeaderRow = document.createElement('tr');
-    arrHeaders.forEach(strHeaderText => {
-        const elmTh = document.createElement('th');
-        elmTh.textContent = strHeaderText.charAt(0).toUpperCase() + strHeaderText.slice(1);
-        elmHeaderRow.appendChild(elmTh);
-    });
-    elmThead.appendChild(elmHeaderRow);
-    elmTable.appendChild(elmThead);
-    
-    // Create table body
-    const elmTbody = document.createElement('tbody');
-    arrData.forEach(objItem => {
-        const elmRow = document.createElement('tr');
-        arrHeaders.forEach(strHeader => {
-            const elmCell = document.createElement('td');
-            if (strHeader === 'Actions') {
-                elmCell.innerHTML = `<button onclick="deleteRecord('${objItem._id}')">Delete</button>`;
-            } else {
-                elmCell.textContent = objItem[strHeader] || 'N/A';
-            }
-            elmRow.appendChild(elmCell);
-        });
-        elmTbody.appendChild(elmRow);
-    });
-    elmTable.appendChild(elmTbody);
+    initializeDataTable(arrData);
 }
 
 // === SETTINGS MANAGEMENT ===

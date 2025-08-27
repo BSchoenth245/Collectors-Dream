@@ -500,10 +500,77 @@ body.dark-mode.theme-rose-navy {
     --accent-gradient: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
 }
 
+/* DataTables Styling */
+.dataTables_wrapper {
+    color: var(--text-dark);
+}
+
+.dataTables_length select,
+.dataTables_filter input {
+    background: var(--background-white);
+    color: var(--text-dark);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+
+.dataTables_info,
+.dataTables_length label,
+.dataTables_filter label {
+    color: var(--text-dark);
+}
+
+.dataTables_paginate .paginate_button {
+    color: var(--text-dark) !important;
+    background: var(--background-white);
+    border: 1px solid var(--border-light);
+}
+
+.dataTables_paginate .paginate_button:hover {
+    color: var(--primary-color) !important;
+    background: var(--background-light);
+    border-color: var(--primary-color);
+}
+
+.dataTables_paginate .paginate_button.current {
+    color: white !important;
+    background: var(--primary-gradient) !important;
+    border-color: var(--primary-color);
+}
+
+.dataTables_processing {
+    background: var(--background-white);
+    color: var(--text-dark);
+    border: 1px solid var(--border-light);
+}
+
 /* Dark Mode Additional Overrides */
 body.dark-mode .table {
     --bs-table-bg: var(--background-white);
     --bs-table-color: var(--text-dark);
+}
+
+body.dark-mode .dataTables_wrapper {
+    color: var(--text-dark);
+}
+
+body.dark-mode .dataTables_length select,
+body.dark-mode .dataTables_filter input {
+    background: var(--background-white);
+    color: var(--text-dark);
+    border-color: var(--border-light);
+}
+
+body.dark-mode .dataTables_paginate .paginate_button {
+    background: var(--background-white);
+    border-color: var(--border-light);
+    color: var(--text-dark) !important;
+}
+
+body.dark-mode .dataTables_paginate .paginate_button:hover {
+    background: var(--background-light);
+    border-color: var(--primary-color);
+    color: var(--primary-color) !important;
 }
 
 body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > td {
