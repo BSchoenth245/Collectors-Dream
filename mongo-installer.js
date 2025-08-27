@@ -14,11 +14,22 @@ class MongoInstaller {
     // Check if MongoDB is installed
     checkMongoDB() {
         return new Promise((resolve) => {
-            exec('mongod --version', (error, strStdout) => {
+            exec('mongod --version', { timeout: 10000 }, (error, strStdout) => {
                 if (!error && strStdout.includes('db version')) {
                     resolve({ found: true, version: strStdout.split('\n')[0] });
                 } else {
-                    resolve({ found: false });
+                    // Also check for MongoDB service on Windows
+                    if (this.strPlatform === 'win32') {
+                        exec('sc query MongoDB', { timeout: 5000 }, (objServiceError, strServiceOutput) => {
+                            if (!objServiceError && strServiceOutput.includes('MongoDB')) {
+                                resolve({ found: true, version: 'Service detected' });
+                            } else {
+                                resolve({ found: false });
+                            }
+                        });
+                    } else {
+                        resolve({ found: false });
+                    }
                 }
             });
         });
@@ -27,6 +38,8 @@ class MongoInstaller {
     // Install MongoDB based on platform
     async installMongoDB(fnProgressCallback) {
         try {
+            fnProgressCallback({ progress: 5, message: 'Preparing installation...' });
+            
             if (this.strPlatform === 'win32') {
                 return await this.installWindows(fnProgressCallback);
             } else if (this.strPlatform === 'linux') {
@@ -35,6 +48,7 @@ class MongoInstaller {
                 throw new Error('Unsupported platform for automatic installation');
             }
         } catch (error) {
+            console.error('MongoDB installation error:', error);
             return { success: false, error: error.message };
         }
     }
@@ -44,40 +58,70 @@ class MongoInstaller {
         return new Promise((resolve) => {
             fnProgressCallback({ progress: 10, message: 'Starting Windows installation...' });
             
-            // Try winget first
-            const objWingetProcess = spawn('winget', ['install', 'MongoDB.Server', '--accept-package-agreements', '--accept-source-agreements'], {
-                stdio: 'pipe'
+            // Try winget with additional flags to prevent user prompts
+            const objWingetProcess = spawn('winget', [
+                'install', 
+                'MongoDB.Server', 
+                '--accept-package-agreements', 
+                '--accept-source-agreements',
+                '--disable-interactivity',
+                '--silent'
+            ], {
+                stdio: 'pipe',
+                shell: true,
+                detached: false
             });
 
             let strOutput = '';
+            let strError = '';
+            
             objWingetProcess.stdout.on('data', (data) => {
                 strOutput += data.toString();
-                if (strOutput.includes('Installing')) {
+                console.log('winget stdout:', data.toString());
+                if (strOutput.includes('Installing') || strOutput.includes('Downloading')) {
                     fnProgressCallback({ progress: 50, message: 'Installing MongoDB...' });
-                } else if (strOutput.includes('Successfully')) {
+                } else if (strOutput.includes('Successfully') || strOutput.includes('installed')) {
                     fnProgressCallback({ progress: 90, message: 'Installation complete...' });
                 }
             });
+            
+            objWingetProcess.stderr.on('data', (data) => {
+                strError += data.toString();
+                console.log('winget stderr:', data.toString());
+            });
 
             objWingetProcess.on('close', (intCode) => {
-                if (intCode === 0) {
+                console.log('winget process closed with code:', intCode);
+                if (intCode === 0 || strOutput.includes('Successfully')) {
                     fnProgressCallback({ progress: 100, message: 'MongoDB installed successfully!' });
                     resolve({ success: true });
                 } else {
                     // Fallback to manual download instructions
                     resolve({ 
                         success: false, 
-                        error: 'Automatic installation failed. Please install manually from https://www.mongodb.com/try/download/community' 
+                        error: `Automatic installation failed (code: ${intCode}). Please install manually from https://www.mongodb.com/try/download/community` 
                     });
                 }
             });
 
-            objWingetProcess.on('error', () => {
+            objWingetProcess.on('error', (error) => {
+                console.log('winget process error:', error);
                 resolve({ 
                     success: false, 
                     error: 'winget not available. Please install MongoDB manually from https://www.mongodb.com/try/download/community' 
                 });
             });
+            
+            // Add timeout to prevent hanging
+            setTimeout(() => {
+                if (!objWingetProcess.killed) {
+                    objWingetProcess.kill();
+                    resolve({ 
+                        success: false, 
+                        error: 'Installation timed out. Please install MongoDB manually from https://www.mongodb.com/try/download/community' 
+                    });
+                }
+            }, 300000); // 5 minute timeout
         });
     }
 

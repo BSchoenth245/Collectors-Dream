@@ -234,15 +234,31 @@ function startServer() {
 
 // === IPC HANDLERS ===
 ipcMain.on('check-mongodb', async (event) => {
-    const objResult = await objInstaller.checkMongoDB();
-    event.reply('mongodb-status', objResult);
+    try {
+        const objResult = await objInstaller.checkMongoDB();
+        event.reply('mongodb-status', objResult);
+    } catch (error) {
+        console.error('Error checking MongoDB:', error);
+        event.reply('mongodb-status', { found: false, error: error.message });
+    }
 });
 
 ipcMain.on('install-mongodb', async (event) => {
-    const objResult = await objInstaller.installMongoDB((objProgress) => {
-        event.reply('install-progress', objProgress);
-    });
-    event.reply('install-result', objResult);
+    try {
+        const objResult = await objInstaller.installMongoDB((objProgress) => {
+            if (event.sender && !event.sender.isDestroyed()) {
+                event.reply('install-progress', objProgress);
+            }
+        });
+        if (event.sender && !event.sender.isDestroyed()) {
+            event.reply('install-result', objResult);
+        }
+    } catch (error) {
+        console.error('Error installing MongoDB:', error);
+        if (event.sender && !event.sender.isDestroyed()) {
+            event.reply('install-result', { success: false, error: error.message });
+        }
+    }
 });
 
 ipcMain.on('skip-mongodb', (event) => {
@@ -263,22 +279,43 @@ ipcMain.on('continue-to-app', (event) => {
 
 // === ELECTRON APP LIFECYCLE ===
 app.whenReady().then(async () => {
-    if (isFirstRun()) {
-        createWizard();
-    } else {
+    try {
+        if (isFirstRun()) {
+            createWizard();
+        } else {
+            createWindow();
+        }
+        new AppUpdater();
+    } catch (error) {
+        console.error('Error during app startup:', error);
+        // Still try to create the main window as fallback
         createWindow();
     }
-    new AppUpdater();
 });
 
 // Handle app quit when all windows closed
 app.on('window-all-closed', () => {
-    if (objServer) {
-        objServer.close();
+    try {
+        if (objServer) {
+            objServer.close();
+        }
+    } catch (error) {
+        console.error('Error closing server:', error);
     }
     if (process.platform !== 'darwin') {
         app.quit();
     }
+});
+
+// Handle uncaught exceptions to prevent app crashes
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    // Don't exit the process, just log the error
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // Don't exit the process, just log the error
 });
 
 // Handle app activation (macOS)
