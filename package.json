@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/package.json",
   "name": "collectors-dream",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A database management system for collectors",
   "main": "main.js",
   "scripts": {
@@ -84,10 +84,12 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "differentialPackage": false,
-      "runAfterFinish": false,
-      "packElevateHelper": false,
-      "perMachine": false
+      "runAfterFinish": true,
+      "installerIcon": "assets/colored-logo.png",
+      "uninstallerIcon": "assets/colored-logo.png",
+      "installerHeaderIcon": "assets/colored-logo.png",
+      "deleteAppDataOnUninstall": false,
+      "differentialPackage": false
     },
     "nodeGypRebuild": false,
     "buildDependenciesFromSource": false
