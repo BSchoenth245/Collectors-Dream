@@ -143,12 +143,26 @@
                 <h3>Settings</h3>
                 
                 <div class="settings-section">
-                    <h5>Appearance</h5>
+                    <h5>Themes</h5>
+                    <div class="theme-options">
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="default" onchange="changeTheme()" checked>
+                            <span class="theme-name">Default (Deep Purple)</span>
+                        </label>
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="teal-gold" onchange="changeTheme()">
+                            <span class="theme-name">Teal & Gold</span>
+                        </label>
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="rose-navy" onchange="changeTheme()">
+                            <span class="theme-name">Rose & Navy</span>
+                        </label>
+                    </div>
                     <div class="setting-item">
                         <label class="setting-label">
                             <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
                             <span class="setting-text">Dark Mode</span>
-                            <span class="setting-description">Switch to dark theme with inverted colors</span>
+                            <span class="setting-description">Invert colors of selected theme</span>
                         </label>
                     </div>
                 </div>

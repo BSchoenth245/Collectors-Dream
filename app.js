@@ -729,7 +729,7 @@ function displayFilteredData(arrData) {
 }
 
 // === SETTINGS MANAGEMENT ===
-let objUserSettings = { darkMode: false };
+let objUserSettings = { darkMode: false, theme: 'default' };
 
 // Load settings from server
 function loadSettings() {
@@ -753,7 +753,18 @@ function loadSettings() {
 // Apply settings to UI
 function applySettings() {
     const elmToggle = document.getElementById('darkModeToggle');
+    const elmThemeRadios = document.querySelectorAll('input[name="theme"]');
     
+    // Apply theme
+    document.body.className = '';
+    document.body.classList.add(`theme-${objUserSettings.theme}`);
+    
+    // Set correct radio button
+    elmThemeRadios.forEach(radio => {
+        radio.checked = radio.value === objUserSettings.theme;
+    });
+    
+    // Apply dark mode
     if (objUserSettings.darkMode) {
         document.body.classList.add('dark-mode');
         if (elmToggle) elmToggle.checked = true;
@@ -777,6 +788,16 @@ function saveSettings() {
         // Fallback to localStorage for web version
         localStorage.setItem('darkMode', objUserSettings.darkMode ? 'enabled' : 'disabled');
     });
+}
+
+// Change theme
+function changeTheme() {
+    const elmSelectedRadio = document.querySelector('input[name="theme"]:checked');
+    if (elmSelectedRadio) {
+        objUserSettings.theme = elmSelectedRadio.value;
+        applySettings();
+        saveSettings();
+    }
 }
 
 // Toggle dark mode
