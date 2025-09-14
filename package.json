@@ -11,6 +11,8 @@
     "build": "electron-builder --win --linux",
     "build-win": "electron-builder --win",
     "build-linux": "electron-builder --linux",
+    "build-flatpak": "npm run build-linux && ./build-flatpak.sh",
+    "build-all": "npm run build && npm run build-flatpak",
     "release": "electron-builder --win --linux --publish=always"
   },
   "author": {
@@ -78,6 +80,7 @@
       "category": "Utility",
       "artifactName": "${productName}-${version}.${ext}"
     },
+
     "afterPack": "build/afterPack.js",
     "compression": "store",
     "nsis": {

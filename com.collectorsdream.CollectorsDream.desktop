@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Collector's Dream
+Comment=A database management system for collectors
+Exec=collectors-dream
+Icon=com.collectorsdream.CollectorsDream
+Type=Application
+Categories=Utility;Database;Office;

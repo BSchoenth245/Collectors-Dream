@@ -1,0 +1,34 @@
+app-id: com.collectorsdream.CollectorsDream
+runtime: org.freedesktop.Platform
+runtime-version: '22.08'
+sdk: org.freedesktop.Sdk
+command: collectors-dream-launcher
+
+build-options:
+  env:
+    LD_LIBRARY_PATH: /app
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --socket=pulseaudio
+  - --share=network
+  - --device=dri
+  - --filesystem=home
+  - --env=LD_LIBRARY_PATH=/app
+
+modules:
+  - name: collectors-dream
+    buildsystem: simple
+    build-commands:
+      - cp -r dist/linux-unpacked/* /app/
+      - install -Dm755 collectors-dream-launcher /app/bin/collectors-dream-launcher
+      - install -Dm644 com.collectorsdream.CollectorsDream.desktop /app/share/applications/com.collectorsdream.CollectorsDream.desktop
+    sources:
+      - type: dir
+        path: .
+      - type: file
+        path: com.collectorsdream.CollectorsDream.desktop
+      - type: file
+        path: collectors-dream-launcher
