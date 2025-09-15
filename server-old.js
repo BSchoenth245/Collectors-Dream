@@ -13,6 +13,12 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
+// Debug middleware
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+});
+
 // === DATABASE CONNECTION ===
 const strMongoURI = 'mongodb://127.0.0.1:27017/CollectorDream';
 mongoose.connect(strMongoURI, {
@@ -27,22 +33,52 @@ const Schema = mongoose.Schema;
 const dataSchema = new Schema({}, { strict: false });
 const Data = mongoose.model('Data', dataSchema, 'collection');
 
-// === API ROUTES (MUST BE BEFORE STATIC FILES) ===
+// === API ROUTES (MUST BE FIRST) ===
 
-// Individual collection record routes (MUST BE FIRST)
+// Test route
+app.get('/api/test', (req, res) => {
+    console.log('Test route hit!');
+    res.json({ message: 'Server is working with new routes' });
+});
+
+// Collection routes
 app.get('/api/collection/:id', async (req, res) => {
+    console.log('GET /api/collection/:id hit with ID:', req.params.id);
     try {
         const strId = req.params.id;
+        console.log('Searching for document with ID:', strId);
         const objDocument = await Data.findById(strId);
         if (!objDocument) {
+            console.log('Document not found for ID:', strId);
             return res.status(404).json({ message: "Document not found" });
         }
+        console.log('Document found:', objDocument);
         res.json(objDocument);
     } catch (error) {
+        console.log('Error in GET /api/collection/:id:', error);
         if (error.name === 'CastError') {
             return res.status(400).json({ message: "Invalid ID format" });
         }
         res.status(500).json({ message: error.message });
+    }
+});
+
+app.get('/api/collection', async (req, res) => {
+    try {
+        const arrAllData = await Data.find();
+        res.json(arrAllData);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+app.post('/api/collection', async (req, res) => {
+    try {
+        const objNewData = Data(req.body);
+        const objSavedData = await objNewData.save();
+        res.status(201).json(objSavedData);
+    } catch(err){
+        res.status(400).json({message: err.message});
     }
 });
 
@@ -76,26 +112,6 @@ app.delete('/api/collection/:id', async (req, res) => {
             return res.status(400).json({ message: "Invalid ID format" });
         }
         res.status(500).json({ message: error.message });
-    }
-});
-
-// General collection routes (AFTER specific ID routes)
-app.get('/api/collection', async (req, res) => {
-    try {
-        const arrAllData = await Data.find();
-        res.json(arrAllData);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-app.post('/api/collection', async (req, res) => {
-    try {
-        const objNewData = Data(req.body);
-        const objSavedData = await objNewData.save();
-        res.status(201).json(objSavedData);
-    } catch(err){
-        res.status(400).json({message: err.message});
     }
 });
 
@@ -164,10 +180,10 @@ app.post('/api/settings', (req, res) => {
     }
 });
 
-// === STATIC FILES (AFTER ALL API ROUTES) ===
+// === STATIC FILES (AFTER API ROUTES) ===
 app.use(express.static(__dirname));
 
-// === ROOT ROUTE (LAST) ===
+// === ROOT ROUTE ===
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
