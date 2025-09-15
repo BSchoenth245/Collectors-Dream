@@ -58,7 +58,13 @@ function initializeDataTable(arrData) {
     const arrColumns = arrHeaders.map(strHeader => ({
         title: strHeader.charAt(0).toUpperCase() + strHeader.slice(1),
         data: strHeader,
-        defaultContent: 'N/A'
+        defaultContent: 'N/A',
+        render: function(data, type, row) {
+            if (typeof data === 'boolean') {
+                return data ? 'Yes' : 'No';
+            }
+            return data || 'N/A';
+        }
     }));
     
     // Add Actions column
@@ -115,7 +121,12 @@ function createBasicTable(arrData, arrHeaders) {
         const elmRow = document.createElement('tr');
         arrHeaders.forEach(strHeader => {
             const elmCell = document.createElement('td');
-            elmCell.textContent = objItem[strHeader] || 'N/A';
+            const value = objItem[strHeader];
+            if (typeof value === 'boolean') {
+                elmCell.textContent = value ? 'Yes' : 'No';
+            } else {
+                elmCell.textContent = value || 'N/A';
+            }
             elmRow.appendChild(elmCell);
         });
         // Actions cell
@@ -278,12 +289,22 @@ function loadCategoryForm() {
     objCategory.fields.forEach(objField => {
         const elmFieldDiv = document.createElement('div');
         elmFieldDiv.className = 'mb-3';
-        const strInputType = objField.type === 'number' ? 'text' : objField.type;
-        const strInputPattern = objField.type === 'number' ? 'pattern="[0-9]*"' : '';
-        elmFieldDiv.innerHTML = `
-            <label class="form-label">${objField.label}:</label>
-            <input type="${strInputType}" ${strInputPattern} class="form-control" name="${objField.name}" required>
-        `;
+        
+        if (objField.type === 'boolean') {
+            elmFieldDiv.innerHTML = `
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" name="${objField.name}" id="${objField.name}">
+                    <label class="form-check-label" for="${objField.name}">${objField.label}</label>
+                </div>
+            `;
+        } else {
+            const strInputType = objField.type === 'number' ? 'text' : objField.type;
+            const strInputPattern = objField.type === 'number' ? 'pattern="[0-9]*"' : '';
+            elmFieldDiv.innerHTML = `
+                <label class="form-label">${objField.label}:</label>
+                <input type="${strInputType}" ${strInputPattern} class="form-control" name="${objField.name}" required>
+            `;
+        }
         elmFormFields.appendChild(elmFieldDiv);
     });
     
@@ -300,9 +321,13 @@ function submitCategoryData() {
     };
     
     elmInputs.forEach(elmInput => {
-        let value = elmInput.value;
-        if (elmInput.type === 'number') {
-            value = Number(value);
+        let value;
+        if (elmInput.type === 'checkbox') {
+            value = elmInput.checked;
+        } else if (elmInput.type === 'number' || elmInput.pattern === '[0-9]*') {
+            value = Number(elmInput.value);
+        } else {
+            value = elmInput.value;
         }
         objData[elmInput.name] = value;
     });
@@ -317,7 +342,13 @@ function submitCategoryData() {
     .then(response => response.json())
     .then(objResult => {
         Swal.fire('Success!', 'Data saved successfully!', 'success');
-        elmInputs.forEach(elmInput => elmInput.value = '');
+        elmInputs.forEach(elmInput => {
+            if (elmInput.type === 'checkbox') {
+                elmInput.checked = false;
+            } else {
+                elmInput.value = '';
+            }
+        });
         refreshTable();
     })
     .catch(error => {
@@ -529,6 +560,7 @@ function addNewField() {
         <select class="form-select">
             <option value="text">Text</option>
             <option value="number">Number</option>
+            <option value="boolean">Boolean (Yes/No)</option>
         </select>
         <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">Remove</button>
     `;
@@ -563,6 +595,7 @@ function loadEditCategoryForm() {
             <select class="form-select">
                 <option value="text" ${objField.type === 'text' ? 'selected' : ''}>Text</option>
                 <option value="number" ${objField.type === 'number' ? 'selected' : ''}>Number</option>
+                <option value="boolean" ${objField.type === 'boolean' ? 'selected' : ''}>Boolean (Yes/No)</option>
             </select>
             <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">Remove</button>
         `;
@@ -582,6 +615,7 @@ function addEditField() {
         <select class="form-select">
             <option value="text">Text</option>
             <option value="number">Number</option>
+            <option value="boolean">Boolean (Yes/No)</option>
         </select>
         <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">Remove</button>
     `;
