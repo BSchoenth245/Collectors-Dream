@@ -138,9 +138,6 @@ app.delete('/api/categories/:key', (req, res) => {
     }
 });
 
-// === STATIC FILES (AFTER API ROUTES) ===
-app.use(express.static(__dirname));
-
 // Settings routes
 app.get('/api/settings', (req, res) => {
     try {
@@ -165,6 +162,9 @@ app.post('/api/settings', (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
+// === STATIC FILES (AFTER API ROUTES) ===
+app.use(express.static(__dirname));
 
 // === ROOT ROUTE ===
 app.get('/', (req, res) => {

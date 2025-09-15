@@ -171,11 +171,26 @@ function refreshTable() {
 
 // Edit specific record by ID
 function editRecord(strId) {
+    console.log('Fetching record with ID:', strId);
     // Fetch the record data
     fetch(`http://127.0.0.1:8000/api/collection/${strId}`)
-    .then(response => response.json())
-    .then(objRecord => {
-        showEditModal(objRecord);
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.text();
+    })
+    .then(text => {
+        console.log('Response text:', text);
+        try {
+            const objRecord = JSON.parse(text);
+            showEditModal(objRecord);
+        } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            throw new Error('Invalid JSON response: ' + text.substring(0, 100));
+        }
     })
     .catch(error => {
         console.error('Error fetching record:', error);
@@ -186,12 +201,8 @@ function editRecord(strId) {
 // Show edit modal with record data
 function showEditModal(objRecord) {
     const strCategory = objRecord.category;
-    if (!strCategory || !objCategories[strCategory]) {
-        Swal.fire('Error!', 'Cannot edit: Category not found', 'error');
-        return;
-    }
-    
     const objCategory = objCategories[strCategory];
+    const strCategoryName = objCategory ? objCategory.name : 'Item';
     
     // Create modal HTML
     const strModalHtml = `
@@ -199,7 +210,7 @@ function showEditModal(objRecord) {
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Edit ${objCategory.name} Item</h5>
+                        <h5 class="modal-title">Edit ${strCategoryName}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -226,29 +237,43 @@ function showEditModal(objRecord) {
     // Add modal to page
     document.body.insertAdjacentHTML('beforeend', strModalHtml);
     
-    // Populate form fields
+    // Populate form fields - show ALL fields from the record
     const elmFormFields = document.getElementById('editFormFields');
-    objCategory.fields.forEach(objField => {
+    
+    // Get all fields from the record (excluding MongoDB internal fields)
+    Object.keys(objRecord).forEach(strFieldName => {
+        if (strFieldName === '_id' || strFieldName === '__v' || strFieldName === 'category') {
+            return; // Skip internal fields
+        }
+        
+        const currentValue = objRecord[strFieldName];
         const elmFieldDiv = document.createElement('div');
         elmFieldDiv.className = 'mb-3';
         
-        const currentValue = objRecord[objField.name];
+        // Try to get field definition from category, fallback to auto-detect type
+        let objFieldDef = null;
+        if (objCategory && objCategory.fields) {
+            objFieldDef = objCategory.fields.find(f => f.name === strFieldName);
+        }
         
-        if (objField.type === 'boolean') {
+        const strFieldType = objFieldDef ? objFieldDef.type : (typeof currentValue === 'boolean' ? 'boolean' : typeof currentValue === 'number' ? 'number' : 'text');
+        const strFieldLabel = objFieldDef ? objFieldDef.label : strFieldName.charAt(0).toUpperCase() + strFieldName.slice(1);
+        
+        if (strFieldType === 'boolean') {
             const boolChecked = currentValue ? 'checked' : '';
             elmFieldDiv.innerHTML = `
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" name="${objField.name}" id="edit_${objField.name}" ${boolChecked}>
-                    <label class="form-check-label" for="edit_${objField.name}">${objField.label}</label>
+                    <input type="checkbox" class="form-check-input" name="${strFieldName}" id="edit_${strFieldName}" ${boolChecked}>
+                    <label class="form-check-label" for="edit_${strFieldName}">${strFieldLabel}</label>
                 </div>
             `;
         } else {
-            const strInputType = objField.type === 'number' ? 'text' : objField.type;
-            const strInputPattern = objField.type === 'number' ? 'pattern="[0-9]*"' : '';
+            const strInputType = strFieldType === 'number' ? 'text' : 'text';
+            const strInputPattern = strFieldType === 'number' ? 'pattern="[0-9]*"' : '';
             const strValue = currentValue || '';
             elmFieldDiv.innerHTML = `
-                <label class="form-label">${objField.label}:</label>
-                <input type="${strInputType}" ${strInputPattern} class="form-control" name="${objField.name}" value="${strValue}" required>
+                <label class="form-label">${strFieldLabel}:</label>
+                <input type="${strInputType}" ${strInputPattern} class="form-control" name="${strFieldName}" value="${strValue}" required>
             `;
         }
         elmFormFields.appendChild(elmFieldDiv);
