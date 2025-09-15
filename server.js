@@ -39,6 +39,22 @@ app.get('/api/collection', async (req, res) => {
     }
 });
 
+app.get('/api/collection/:id', async (req, res) => {
+    try {
+        const strId = req.params.id;
+        const objDocument = await Data.findById(strId);
+        if (!objDocument) {
+            return res.status(404).json({ message: "Document not found" });
+        }
+        res.json(objDocument);
+    } catch (error) {
+        if (error.name === 'CastError') {
+            return res.status(400).json({ message: "Invalid ID format" });
+        }
+        res.status(500).json({ message: error.message });
+    }
+});
+
 app.post('/api/collection', async (req, res) => {
     try {
         const objNewData = Data(req.body);
@@ -46,6 +62,22 @@ app.post('/api/collection', async (req, res) => {
         res.status(201).json(objSavedData);
     } catch(err){
         res.status(400).json({message: err.message});
+    }
+});
+
+app.put('/api/collection/:id', async (req, res) => {
+    try {
+        const strId = req.params.id;
+        const objUpdatedData = await Data.findByIdAndUpdate(strId, req.body, { new: true });
+        if (!objUpdatedData) {
+            return res.status(404).json({ message: "Document not found" });
+        }
+        res.json(objUpdatedData);
+    } catch (error) {
+        if (error.name === 'CastError') {
+            return res.status(400).json({ message: "Invalid ID format" });
+        }
+        res.status(500).json({ message: error.message });
     }
 });
 

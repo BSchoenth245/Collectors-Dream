@@ -73,7 +73,10 @@ function initializeDataTable(arrData) {
         data: null,
         orderable: false,
         render: function(data, type, row) {
-            return `<button class="btn btn-sm btn-danger" onclick="deleteRecord('${row._id}')">Delete</button>`;
+            return `
+                <button class="btn btn-sm btn-primary me-1" onclick="editRecord('${row._id}')">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteRecord('${row._id}')">Delete</button>
+            `;
         }
     });
     
@@ -131,7 +134,10 @@ function createBasicTable(arrData, arrHeaders) {
         });
         // Actions cell
         const elmActionsCell = document.createElement('td');
-        elmActionsCell.innerHTML = `<button class="btn btn-sm btn-danger" onclick="deleteRecord('${objItem._id}')">Delete</button>`;
+        elmActionsCell.innerHTML = `
+            <button class="btn btn-sm btn-primary me-1" onclick="editRecord('${objItem._id}')">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteRecord('${objItem._id}')">Delete</button>
+        `;
         elmRow.appendChild(elmActionsCell);
         elmTbody.appendChild(elmRow);
     });
@@ -159,6 +165,146 @@ document.addEventListener('DOMContentLoaded', () => {
 // Refresh table data
 function refreshTable() {
     fetchAndDisplayData();
+}
+
+// Edit specific record by ID
+function editRecord(strId) {
+    // Fetch the record data
+    fetch(`http://127.0.0.1:8000/api/collection/${strId}`)
+    .then(response => response.json())
+    .then(objRecord => {
+        showEditModal(objRecord);
+    })
+    .catch(error => {
+        console.error('Error fetching record:', error);
+        Swal.fire('Error!', 'Error loading record: ' + error.message, 'error');
+    });
+}
+
+// Show edit modal with record data
+function showEditModal(objRecord) {
+    const strCategory = objRecord.category;
+    if (!strCategory || !objCategories[strCategory]) {
+        Swal.fire('Error!', 'Cannot edit: Category not found', 'error');
+        return;
+    }
+    
+    const objCategory = objCategories[strCategory];
+    
+    // Create modal HTML
+    const strModalHtml = `
+        <div class="modal fade" id="editModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit ${objCategory.name} Item</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editForm">
+                            <input type="hidden" id="editRecordId" value="${objRecord._id}">
+                            <div id="editFormFields"></div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" onclick="updateRecord()">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const elmExistingModal = document.getElementById('editModal');
+    if (elmExistingModal) {
+        elmExistingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', strModalHtml);
+    
+    // Populate form fields
+    const elmFormFields = document.getElementById('editFormFields');
+    objCategory.fields.forEach(objField => {
+        const elmFieldDiv = document.createElement('div');
+        elmFieldDiv.className = 'mb-3';
+        
+        const currentValue = objRecord[objField.name];
+        
+        if (objField.type === 'boolean') {
+            const boolChecked = currentValue ? 'checked' : '';
+            elmFieldDiv.innerHTML = `
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" name="${objField.name}" id="edit_${objField.name}" ${boolChecked}>
+                    <label class="form-check-label" for="edit_${objField.name}">${objField.label}</label>
+                </div>
+            `;
+        } else {
+            const strInputType = objField.type === 'number' ? 'text' : objField.type;
+            const strInputPattern = objField.type === 'number' ? 'pattern="[0-9]*"' : '';
+            const strValue = currentValue || '';
+            elmFieldDiv.innerHTML = `
+                <label class="form-label">${objField.label}:</label>
+                <input type="${strInputType}" ${strInputPattern} class="form-control" name="${objField.name}" value="${strValue}" required>
+            `;
+        }
+        elmFormFields.appendChild(elmFieldDiv);
+    });
+    
+    // Show modal
+    const elmModal = new bootstrap.Modal(document.getElementById('editModal'));
+    elmModal.show();
+}
+
+// Update record with new data
+function updateRecord() {
+    const strRecordId = document.getElementById('editRecordId').value;
+    const elmFormFields = document.getElementById('editFormFields');
+    const elmInputs = elmFormFields.querySelectorAll('input');
+    const objData = {};
+    
+    elmInputs.forEach(elmInput => {
+        if (elmInput.type === 'hidden') return;
+        
+        let value;
+        if (elmInput.type === 'checkbox') {
+            value = elmInput.checked;
+        } else if (elmInput.type === 'number' || elmInput.pattern === '[0-9]*') {
+            value = Number(elmInput.value);
+        } else {
+            value = elmInput.value;
+        }
+        objData[elmInput.name] = value;
+    });
+    
+    // Send update request
+    fetch(`http://127.0.0.1:8000/api/collection/${strRecordId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(objData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(() => {
+        // Close modal
+        const elmModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+        elmModal.hide();
+        
+        // Refresh table
+        refreshTable();
+        Swal.fire('Success!', 'Record updated successfully', 'success');
+    })
+    .catch(error => {
+        console.error('Error updating record:', error);
+        Swal.fire('Error!', 'Error updating record: ' + error.message, 'error');
+    });
 }
 
 // Delete specific record by ID
