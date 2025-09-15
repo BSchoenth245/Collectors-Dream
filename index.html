@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collector's Dream</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="styles.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Collector's Dream</h1>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search" type="button" role="tab">Search Entries</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="entry-tab" data-bs-toggle="tab" data-bs-target="#entry" type="button" role="tab">Add Entry</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button" role="tab">Categories</button>
+            </li>
+            <li class="nav-item ms-auto" role="presentation">
+                <button class="nav-link" id="options-tab" data-bs-toggle="tab" data-bs-target="#options" type="button" role="tab">Options</button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="myTabContent">
+            <!-- Search Tab -->
+            <div class="tab-pane fade show active" id="search" role="tabpanel">
+                <div class="search-container">
+                    <h3>Search Database</h3>
+                    <div class="mb-3">
+                        <label for="searchCategorySelect" class="form-label">Select Category:</label>
+                        <select id="searchCategorySelect" class="form-select" onchange="filterByCategory()">
+                            <option value="">Choose a category...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- DataTable Section - Only in Search Tab -->
+                <div class="datatable-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3>Database Records</h3>
+                        <button class="btn btn-secondary" onclick="refreshTable()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <table id="dataTable" class="table table-striped" style="width:100%">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Data Entry Tab -->
+            <div class="tab-pane fade" id="entry" role="tabpanel">
+                <div class="mb-3">
+                    <label for="categorySelect" class="form-label">Select Category:</label>
+                    <select id="categorySelect" class="form-select" onchange="loadCategoryForm()">
+                        <option value="">Choose a category...</option>
+                    </select>
+                </div>
+
+                <div id="dataForm" style="display: none;">
+                    <div id="formFields"></div>
+                    <button class="btn btn-success" onclick="submitCategoryData()">
+                        <i class="fas fa-save"></i> Save to Database
+                    </button>
+                </div>
+            </div>
+
+            <!-- Categories Tab -->
+            <div class="tab-pane fade" id="categories" role="tabpanel">
+                <!-- New Category Button - positioned based on categories existence -->
+                <div id="newCategoryButtonContainer" class="new-category-button-container">
+                    <button id="newCategoryButton" class="btn btn-primary" onclick="showAddCategoryForm()">Create New Category</button>
+                </div>
+                
+                <!-- Categories Grid -->
+                <div id="categoriesGrid" class="categories-grid"></div>
+
+                <div id="addCategoryForm" style="display: none;" class="mb-3 p-3 border rounded">
+                    <h5>Create New Category</h5>
+                    <div class="mb-2">
+                        <input type="text" id="newCategoryName" class="form-control" placeholder="Category Name">
+                    </div>
+                    <div id="newCategoryFields"></div>
+                    <button class="btn btn-sm btn-secondary" onclick="addNewField()">Add Field</button>
+                    <button class="btn btn-sm btn-success" onclick="saveNewCategory()">Save Category</button>
+                    <button class="btn btn-sm btn-danger" onclick="cancelAddCategory()">Cancel</button>
+                </div>
+
+                <div id="editCategoryForm" style="display: none;" class="mb-3 p-3 border rounded">
+                    <h5>Edit Category</h5>
+                    <div class="mb-2">
+                        <label for="editCategorySelect" class="form-label">Select Category to Edit:</label>
+                        <select id="editCategorySelect" class="form-select" onchange="loadEditCategoryForm()">
+                            <option value="">Choose a category...</option>
+                        </select>
+                    </div>
+                    <div id="editCategoryContent" style="display: none;">
+                        <div class="mb-2">
+                            <input type="text" id="editCategoryName" class="form-control" placeholder="Category Name">
+                        </div>
+                        <div id="editCategoryFields"></div>
+                        <button class="btn btn-sm btn-secondary" onclick="addEditField()">Add Field</button>
+                        <button class="btn btn-sm btn-success" onclick="saveEditCategory()">Save Changes</button>
+                        <button class="btn btn-sm btn-danger" onclick="cancelEditCategory()">Cancel</button>
+                    </div>
+                </div>
+
+                <div id="deleteCategoryForm" style="display: none;" class="mb-3 p-3 border rounded">
+                    <h5>Delete Category</h5>
+                    <div class="mb-2">
+                        <label for="deleteCategorySelect" class="form-label">Select Category to Delete:</label>
+                        <select id="deleteCategorySelect" class="form-select">
+                            <option value="">Choose a category...</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-sm btn-danger" onclick="deleteCategory()">Delete Category</button>
+                    <button class="btn btn-sm btn-secondary" onclick="cancelDeleteCategory()">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Options Tab -->
+            <div class="tab-pane fade" id="options" role="tabpanel">
+                <h3>Settings</h3>
+                
+                <div class="settings-section">
+                    <h5>Themes</h5>
+                    <div class="theme-options">
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="default" onchange="changeTheme()" checked>
+                            <span class="theme-name">Default (Deep Purple)</span>
+                        </label>
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="teal-gold" onchange="changeTheme()">
+                            <span class="theme-name">Teal & Gold</span>
+                        </label>
+                        <label class="theme-option">
+                            <input type="radio" name="theme" value="rose-navy" onchange="changeTheme()">
+                            <span class="theme-name">Rose & Navy</span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label class="setting-label">
+                            <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+                            <span class="setting-text">Dark Mode</span>
+                            <span class="setting-description">Invert colors of selected theme</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h5>Data Management</h5>
+                    <div class="setting-item">
+                        <button class="btn btn-secondary" onclick="exportData()">Export Data</button>
+                        <span class="setting-description">Download your collection data as JSON</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</body>
+</html>

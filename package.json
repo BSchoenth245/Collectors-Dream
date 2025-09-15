@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "collectors-dream",
+  "version": "1.0.11",
+  "description": "A database management system for collectors",
+  "main": "main.js",
+  "scripts": {
+    "start": "node start-app.js",
+    "desktop": "electron .",
+    "setup": "node setup.js",
+    "build": "electron-builder --win --linux",
+    "build-win": "electron-builder --win",
+    "build-linux": "electron-builder --linux",
+    "release": "electron-builder --win --linux --publish=always"
+
+  },
+  "author": {
+    "name": "Brock Schoenthlaer",
+    "email": "brockschoenthaler@gmail.com"
+  },
+  "homepage": "https://github.com/BSchoenth245/Collectors-Dream",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "electron-updater": "^6.1.0",
+    "express": "^5.1.0",
+    "mongoose": "^7.8.7"
+  },
+  "devDependencies": {
+    "electron": "^25.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.collectorsdream.app",
+    "productName": "Collectors Dream",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "server.js",
+      "updater.js",
+      "mongo-installer.js",
+      "index.html",
+      "mongo-wizard.html",
+      "app.js",
+      "styles.css",
+      "categories.json",
+      "settings.json",
+      "assets/colored-logo.png",
+      "node_modules/**/*",
+      "!node_modules/**/test/**/*",
+      "!node_modules/**/tests/**/*",
+      "!node_modules/**/*.md",
+      "!node_modules/**/LICENSE*",
+      "!node_modules/**/CHANGELOG*",
+      "!data/**/*",
+      "!dist/**/*"
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "BSchoenth245",
+      "repo": "Collectors-Dream"
+    },
+    "win": {
+      "target": {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      "icon": "assets/colored-logo.png",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "linux": {
+      "target": {
+        "target": "AppImage",
+        "arch": ["x64"]
+      },
+      "icon": "build/icon.png",
+      "category": "Utility",
+      "artifactName": "${productName}-${version}.${ext}"
+    },
+
+    "afterPack": "build/afterPack.js",
+    "compression": "store",
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "differentialPackage": false
+    },
+    "nodeGypRebuild": false,
+    "buildDependenciesFromSource": false
+  }
+}
