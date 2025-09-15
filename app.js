@@ -46,9 +46,11 @@ function initializeDataTable(arrData) {
     
     // If no data, show empty table
     if (!arrData || arrData.length === 0) {
+        console.log('No data found, showing empty table');
         $('#dataTable').html('<thead><tr><th>No Data</th></tr></thead><tbody><tr><td>No records found</td></tr></tbody>');
         return;
     }
+    console.log('Processing', arrData.length, 'records for table');
     
     // Get all unique keys from data
     const setAllKeys = new Set();
@@ -75,6 +77,7 @@ function initializeDataTable(arrData) {
     }));
     
     // Add Actions column
+    console.log('Adding Actions column to table');
     arrColumns.push({
         title: 'Actions',
         data: null,
@@ -82,6 +85,7 @@ function initializeDataTable(arrData) {
         width: '140px',
         className: 'text-nowrap',
         render: function(data, type, row) {
+            console.log('Rendering actions for row:', row._id);
             return `
                 <button class="btn btn-sm btn-primary me-1" onclick="editRecord('${row._id}')">Edit</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteRecord('${row._id}')">Delete</button>
@@ -90,6 +94,7 @@ function initializeDataTable(arrData) {
     });
     
     try {
+        console.log('Attempting to initialize DataTable with columns:', arrColumns);
         // Initialize DataTable
         objDataTable = $('#dataTable').DataTable({
             data: arrData,
@@ -104,9 +109,11 @@ function initializeDataTable(arrData) {
             },
             destroy: true
         });
+        console.log('DataTable initialized successfully');
     } catch (error) {
         console.error('Error initializing DataTable:', error);
         // Fallback to basic table
+        console.log('Falling back to basic table');
         createBasicTable(arrData, arrHeaders);
     }
 }
