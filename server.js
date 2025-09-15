@@ -30,15 +30,6 @@ const Data = mongoose.model('Data', dataSchema, 'collection');
 // === API ROUTES (MUST BE FIRST) ===
 
 // Collection routes
-app.get('/api/collection', async (req, res) => {
-    try {
-        const arrAllData = await Data.find();
-        res.json(arrAllData);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
 app.get('/api/collection/:id', async (req, res) => {
     try {
         const strId = req.params.id;
@@ -51,6 +42,15 @@ app.get('/api/collection/:id', async (req, res) => {
         if (error.name === 'CastError') {
             return res.status(400).json({ message: "Invalid ID format" });
         }
+        res.status(500).json({ message: error.message });
+    }
+});
+
+app.get('/api/collection', async (req, res) => {
+    try {
+        const arrAllData = await Data.find();
+        res.json(arrAllData);
+    } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });

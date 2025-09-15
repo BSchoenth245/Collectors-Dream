@@ -626,3 +626,16 @@ body.dark-mode h6 {
 body.dark-mode p {
     color: var(--text-dark);
 }
+
+/* Actions Column Styling */
+.dataTables_wrapper .text-nowrap {
+    white-space: nowrap;
+}
+
+.dataTables_wrapper .text-nowrap .btn {
+    margin-right: 4px;
+}
+
+.dataTables_wrapper .text-nowrap .btn:last-child {
+    margin-right: 0;
+}

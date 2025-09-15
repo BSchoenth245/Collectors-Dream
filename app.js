@@ -72,6 +72,8 @@ function initializeDataTable(arrData) {
         title: 'Actions',
         data: null,
         orderable: false,
+        width: '140px',
+        className: 'text-nowrap',
         render: function(data, type, row) {
             return `
                 <button class="btn btn-sm btn-primary me-1" onclick="editRecord('${row._id}')">Edit</button>
