@@ -639,3 +639,34 @@ body.dark-mode p {
 .dataTables_wrapper .text-nowrap .btn:last-child {
     margin-right: 0;
 }
+
+/* Dark Mode Table Text - Force White */
+body.dark-mode table,
+body.dark-mode .table,
+body.dark-mode .dataTables_wrapper,
+body.dark-mode .dataTables_wrapper table,
+body.dark-mode .dataTables_wrapper tbody,
+body.dark-mode .dataTables_wrapper thead,
+body.dark-mode .dataTables_wrapper td,
+body.dark-mode .dataTables_wrapper th {
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode .table td,
+body.dark-mode .table th {
+    color: #f1f5f9 !important;
+    border-color: var(--border-light) !important;
+}
+
+body.dark-mode .dataTables_wrapper .dataTables_length,
+body.dark-mode .dataTables_wrapper .dataTables_filter,
+body.dark-mode .dataTables_wrapper .dataTables_info,
+body.dark-mode .dataTables_wrapper .dataTables_processing,
+body.dark-mode .dataTables_wrapper .dataTables_paginate {
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode .dataTables_wrapper .dataTables_length label,
+body.dark-mode .dataTables_wrapper .dataTables_filter label {
+    color: #f1f5f9 !important;
+}
