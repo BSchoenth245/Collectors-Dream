@@ -13,6 +13,14 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
+// Prevent caching of API responses
+app.use('/api', (req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+});
+
 // === DATABASE CONNECTION ===
 const strMongoURI = 'mongodb://127.0.0.1:27017/CollectorDream';
 mongoose.connect(strMongoURI, {
@@ -28,6 +36,11 @@ const dataSchema = new Schema({}, { strict: false });
 const Data = mongoose.model('Data', dataSchema, 'collection');
 
 // === API ROUTES (MUST BE BEFORE STATIC FILES) ===
+
+// Version check endpoint
+app.get('/api/version', (req, res) => {
+    res.json({ version: '1.1.2', timestamp: Date.now() });
+});
 
 // Individual collection record routes (MUST BE FIRST)
 app.get('/api/collection/:id', async (req, res) => {

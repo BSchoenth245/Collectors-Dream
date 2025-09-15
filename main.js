@@ -38,7 +38,9 @@ function createWindow() {
         height: 800,
         webPreferences: {
             nodeIntegration: false,
-            contextIsolation: true
+            contextIsolation: true,
+            webSecurity: false, // Allow localhost requests
+            cache: false // Disable caching
         },
         icon: path.join(__dirname, 'assets', 'colored-logo.png')
     });
@@ -111,6 +113,40 @@ function startServer() {
     const Data = mongoose.model('Data', dataSchema, 'collection');
     
     // === API ROUTES ===
+    // Individual record routes (MUST BE FIRST)
+    objExpressApp.get('/api/collection/:id', async (req, res) => {
+        try {
+            const strId = req.params.id;
+            const objDocument = await Data.findById(strId);
+            if (!objDocument) {
+                return res.status(404).json({ message: "Document not found" });
+            }
+            res.json(objDocument);
+        } catch (error) {
+            if (error.name === 'CastError') {
+                return res.status(400).json({ message: "Invalid ID format" });
+            }
+            res.status(500).json({ message: error.message });
+        }
+    });
+    
+    objExpressApp.put('/api/collection/:id', async (req, res) => {
+        try {
+            const strId = req.params.id;
+            const objUpdatedData = await Data.findByIdAndUpdate(strId, req.body, { new: true });
+            if (!objUpdatedData) {
+                return res.status(404).json({ message: "Document not found" });
+            }
+            res.json(objUpdatedData);
+        } catch (error) {
+            if (error.name === 'CastError') {
+                return res.status(400).json({ message: "Invalid ID format" });
+            }
+            res.status(500).json({ message: error.message });
+        }
+    });
+    
+    // General collection routes (AFTER individual routes)
     objExpressApp.get('/api/collection', async (req, res) => {
         try {
             const arrAllData = await Data.find();

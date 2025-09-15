@@ -245,7 +245,18 @@ function showEditModal(objRecord) {
     // Remove existing modal if any
     const elmExistingModal = document.getElementById('editModal');
     if (elmExistingModal) {
+        // Properly dispose of Bootstrap modal instance
+        const existingModalInstance = bootstrap.Modal.getInstance(elmExistingModal);
+        if (existingModalInstance) {
+            existingModalInstance.dispose();
+        }
         elmExistingModal.remove();
+    }
+    
+    // Also remove any backdrop that might be left behind
+    const elmBackdrop = document.querySelector('.modal-backdrop');
+    if (elmBackdrop) {
+        elmBackdrop.remove();
     }
     
     // Add modal to page
@@ -293,8 +304,21 @@ function showEditModal(objRecord) {
         elmFormFields.appendChild(elmFieldDiv);
     });
     
-    // Show modal
-    const elmModal = new bootstrap.Modal(document.getElementById('editModal'));
+    // Show modal with proper cleanup handling
+    const elmModalElement = document.getElementById('editModal');
+    const elmModal = new bootstrap.Modal(elmModalElement);
+    
+    // Add cleanup when modal is closed via cancel/X button
+    elmModalElement.addEventListener('hidden.bs.modal', function() {
+        elmModal.dispose();
+        elmModalElement.remove();
+        // Remove any leftover backdrop
+        const elmBackdrop = document.querySelector('.modal-backdrop');
+        if (elmBackdrop) {
+            elmBackdrop.remove();
+        }
+    }, { once: true });
+    
     elmModal.show();
 }
 
@@ -334,9 +358,22 @@ function updateRecord() {
         return response.json();
     })
     .then(() => {
-        // Close modal
-        const elmModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
-        elmModal.hide();
+        // Close and cleanup modal
+        const elmModalElement = document.getElementById('editModal');
+        const elmModal = bootstrap.Modal.getInstance(elmModalElement);
+        if (elmModal) {
+            elmModal.hide();
+            // Clean up after modal is hidden
+            elmModalElement.addEventListener('hidden.bs.modal', function() {
+                elmModal.dispose();
+                elmModalElement.remove();
+                // Remove any leftover backdrop
+                const elmBackdrop = document.querySelector('.modal-backdrop');
+                if (elmBackdrop) {
+                    elmBackdrop.remove();
+                }
+            }, { once: true });
+        }
         
         // Refresh table
         refreshTable();
