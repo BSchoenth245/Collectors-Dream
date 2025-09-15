@@ -3,6 +3,7 @@ let objDataTable = null;
 
 // Fetch and display all collection data in DataTable
 function fetchAndDisplayData() {
+    console.log('Fetching data from API...');
     fetch('http://127.0.0.1:8000/api/collection', {
         method: 'GET',
         headers: {
@@ -10,12 +11,15 @@ function fetchAndDisplayData() {
         }
     })
     .then(response => {
+        console.log('API Response status:', response.status);
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
         return response.json();
     })
     .then(arrData => {
+        console.log('Received data:', arrData);
+        console.log('Data length:', arrData.length);
         initializeDataTable(arrData);
     })
     .catch(error => {
@@ -25,11 +29,14 @@ function fetchAndDisplayData() {
 
 // Initialize DataTable with data
 function initializeDataTable(arrData) {
+    console.log('Initializing DataTable with data:', arrData);
     // Wait for jQuery and DataTables to be available
     if (typeof $ === 'undefined' || typeof $.fn.DataTable === 'undefined') {
+        console.log('jQuery or DataTables not ready, waiting...');
         setTimeout(() => initializeDataTable(arrData), 100);
         return;
     }
+    console.log('jQuery and DataTables are ready');
     
     // Destroy existing DataTable if it exists
     if (objDataTable) {

@@ -81,10 +81,13 @@ app.delete('/api/collection/:id', async (req, res) => {
 
 // General collection routes (AFTER specific ID routes)
 app.get('/api/collection', async (req, res) => {
+    console.log('GET /api/collection - Loading all records');
     try {
         const arrAllData = await Data.find();
+        console.log('Found', arrAllData.length, 'records');
         res.json(arrAllData);
     } catch (error) {
+        console.log('Error loading collection:', error);
         res.status(500).json({ message: error.message });
     }
 });
